@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from keras.utils import Sequence
+#from keras.utils import Sequence
+from keras.preprocessing.image import Iterator
 
 import pyBigWig
 from pyfaidx import Fasta
@@ -11,7 +12,7 @@ from pyfaidx import Fasta
 # slice sequence from seq_start+1 to seq_end with length=seq_end-seq_start , return ndarray of length by 4
 def genome_to_1hot(genome,chr_id,seq_start,seq_end):
     chr_str = list(genome[chr_id][seq_start:seq_end].seq.upper())
-    d = dict(zip(['N','A','T','G','C'], range(6)))
+    d = dict(zip(['N','A','C','G','T'], range(6)))
     v = [d[x] for x in chr_str]
     y = np.eye(5)[v]
     return y[:,1:5]
@@ -61,10 +62,10 @@ def import_label(label_data_file,val_chr=['chr11']):
     
 def make_rc_x(x):
     rc_x = np.copy(x)
-    rc_x[:,:,0] = x[:,:,1]==1
-    rc_x[:,:,1] = x[:,:,0]==1
-    rc_x[:,:,2] = x[:,:,3]==1
-    rc_x[:,:,3] = x[:,:,2]==1
+    rc_x[:,:,0] = x[:,:,3]==1
+    rc_x[:,:,3] = x[:,:,0]==1
+    rc_x[:,:,2] = x[:,:,1]==1
+    rc_x[:,:,1] = x[:,:,2]==1
     rc_x = np.flip(rc_x, 1)
     return rc_x
 
@@ -95,6 +96,35 @@ def make_x_batch(genome,bw_dict_unique35,bigwig_file_list,label_data,bins_batch,
             x_batch[i,:,:] = make_x(genome,bw_dict_unique35,bigwig_file,seq_start,seq_end,flanking,chr_id)        
     return x_batch
 
+#def make_xgencode_batch(gencode_path,bins_batch,flanking,label_data):
+#    cpg_bed = BedTool(gencode_path+'cpgisland.bed.gz')
+#    cds_bed = BedTool(gencode_path+'wgEncodeGencodeBasicV19.cds.merged.bed.gz')
+#    intron_bed = BedTool(gencode_path+'wgEncodeGencodeBasicV19.intron.merged.bed.gz')
+#    promoter_bed = BedTool(gencode_path+'wgEncodeGencodeBasicV19.promoter.merged.bed.gz')
+#    utr5_bed = BedTool(gencode_path+'wgEncodeGencodeBasicV19.utr5.merged.bed.gz')
+#    utr3_bed = BedTool(gencode_path+'wgEncodeGencodeBasicV19.utr3.merged.bed.gz')
+#    bed_batch_string = ''
+#    for i in range(bins_batch.shape[1]):
+#        bin_start = bins_batch[0,i]
+#        bin_stop = bins_batch[1,i]
+#        seq_start = int(label_data.iloc[bin_start,1]-flanking)
+#        seq_end = int(label_data.iloc[bin_stop,2]+flanking)
+#        chr_id = label_data.iloc[bin_start,0]
+#        bed_batch_string = bed_batch_string+chr_id+' '+str(seq_start)+' '+str(seq_end)+'\n'
+#        
+#    bed_batch = BedTool(bed_batch_string, from_string=True)
+#    peaks_cpg_bedgraph = bed_batch.intersect(cpg_bed, wa=True, c=True)
+#    peaks_cds_bedgraph = bed_batch.intersect(cds_bed, wa=True, c=True)
+#    peaks_intron_bedgraph = bed_batch.intersect(intron_bed, wa=True, c=True)
+#    peaks_promoter_bedgraph = bed_batch.intersect(promoter_bed, wa=True, c=True)
+#    peaks_utr5_bedgraph = bed_batch.intersect(utr5_bed, wa=True, c=True)
+#    peaks_utr3_bedgraph = bed_batch.intersect(utr3_bed, wa=True, c=True)
+#    xgencode_batch = []    
+#    for cpg, cds, intron, promoter, utr5, utr3 in itertools.izip(peaks_cpg_bedgraph,peaks_cds_bedgraph,peaks_intron_bedgraph,peaks_promoter_bedgraph,peaks_utr5_bedgraph,peaks_utr3_bedgraph):
+#        gencode = np.array([cpg.count, cds.count, intron.count, promoter.count, utr5.count, utr3.count], dtype=bool)
+#        xgencode_batch.append((gencode))
+#    return xgencode_batch
+
 def make_y(label_data,bin_start,bin_stop,cell_idx):
     return label_data[bin_start:(bin_stop+1),cell_idx]+0
 
@@ -113,6 +143,7 @@ def make_ID_list_single(label_region,label_data,num=0):
     if not num == 0:
         label_IDs = np.random.choice(label_IDs,size=num)
     label_IDs = np.vstack((label_IDs,np.zeros_like(label_IDs)))
+
     if label_data.shape[1] > 1:
         for col_idx in range(1,label_data.shape[1]):
             label_IDs_idx = np.nonzero(label_data[:,col_idx])[0]
@@ -121,108 +152,11 @@ def make_ID_list_single(label_region,label_data,num=0):
             label_IDs_idx = np.vstack((label_IDs_idx,np.zeros_like(label_IDs_idx)+col_idx))
             label_IDs = np.concatenate((label_IDs,label_IDs_idx),axis=1)
     label_IDs = label_IDs.T
-    np.random.shuffle(label_IDs)
     return label_IDs
 
-def make_x_batch_positive(genome,bigwig_file_unique35,bigwig_file_list,label_data_bind,use_shift,flanking,window_size=200):
-    seq_len = (flanking)*2+window_size
-    x_batch = np.zeros((label_data_bind.shape[0],seq_len,6))
-    for i in range(label_data_bind.shape[0]):
-        peak_stop = label_data_bind.iloc[i,2]
-        peak_start = label_data_bind.iloc[i,1]
-        med = (peak_stop + peak_start)//2
-        if use_shift:
-            shift = peak_stop - med + window_size//2 -76
-            med = med + np.random.randint(-shift, shift+1)
-        seq_start = med - seq_len//2
-        seq_end = med + seq_len//2
-        bigwig_file = bigwig_file_list[label_data_bind.iloc[i,3]]
-        chr_id = label_data_bind.iloc[i,0]
-        x_batch[i,:,:] = make_x(genome,bigwig_file_unique35,bigwig_file,seq_start,seq_end,flanking,chr_id) 
-    return x_batch
 
-class TrainGeneratorSingle(Sequence):
-    def __init__(self,genome,bigwig_file_unique35,DNase_path,label_region,label_data_bind,label_data_unbind,cell_list,rnaseq_data = 0,gencode_data=0,use_shift=False,unique35=True,rnaseq=False,gencode=False,flanking=0,batch_size=32,ratio_negative=1):
-        self.batch_size = batch_size
-        self.label_region = label_region
-        self.label_data_bind = label_data_bind
-        self.label_data_unbind = label_data_unbind
-        self.cell_list = cell_list
-        self.genome = genome
-        self.unique35 = unique35
-        self.bigwig_file_unique35 = bigwig_file_unique35
-        self.flanking = flanking
-        self.use_shift = use_shift
-        self.rnaseq = rnaseq
-        self.rnaseq_data = rnaseq_data
-        self.gencode = gencode
-        self.gencode_data = gencode_data
-        self.ratio_negative = ratio_negative
-        self.label_IDs_negative = make_ID_list_single(label_region,label_data_unbind,(label_data_bind.shape[0]//len(cell_list)+1)*ratio_negative)
-        self.bigwig_file_list = [DNase_path+'/' +s +'.1x.bw' for s in cell_list]
-        self.start_idx_positive = 0
-        self.start_idx_negative = 0
-        self.positive_indices = np.array(range(label_data_bind.shape[0]))
-        self.on_epoch_end()
-
-    def __len__(self):
-        #Denotes the number of batches per epoch
-        return self.label_data_bind.shape[0] // ((self.batch_size)//2)-1
-
-    def __getitem__(self, index):
-        # Generate indexes of bins of the batch
-        batch_start_idx = self.start_idx_positive
-        batch_end_idx = min([batch_start_idx+self.batch_size//2-1,self.label_data_bind.shape[0]-1])
-        data_indices = self.positive_indices[batch_start_idx:(batch_end_idx+1)]
-        end_idx_negative = min(self.start_idx_negative+self.batch_size//2*self.ratio_negative-1,self.label_IDs_negative.shape[0]-1)
-        negative_batch = self.label_IDs_negative[self.start_idx_negative:(end_idx_negative+1)]
-        self.start_idx_negative = end_idx_negative+1
-        self.start_idx_positive = batch_end_idx+1
-        bins_batch = np.vstack((negative_batch[:,0],negative_batch[:,0],negative_batch[:,1]))        
-        # Generate data
-        X, y = self.__data_generation(bins_batch,data_indices)
-        return X, y
-
-    def on_epoch_end(self):
-        np.random.shuffle(self.positive_indices)
-        self.label_IDs_negative = make_ID_list_single(self.label_region,self.label_data_unbind,(self.label_data_bind.shape[0]//len(self.cell_list)+1)*self.ratio_negative)
-        self.start_idx_positive = 0
-        self.start_idx_negative = 0
-        
-    def __data_generation(self,bins_batch,data_indices):
-        x_fw_positive = make_x_batch_positive(self.genome,self.bigwig_file_unique35,self.bigwig_file_list,self.label_data_bind.iloc[data_indices],self.use_shift,self.flanking)
-        x_fw_negative = make_x_batch(self.genome,self.bigwig_file_unique35,self.bigwig_file_list,self.label_region,bins_batch,self.flanking)
-        x_fw = np.concatenate((x_fw_positive,x_fw_negative))
-        x_rc = make_rc_x(x_fw)
-        if self.rnaseq:
-        # rnaseq
-            positive_cell_idx = self.label_data_bind.iloc[data_indices,3].tolist()
-            negative_cell_idx = bins_batch[2,:].tolist()
-            cell_idx = positive_cell_idx + negative_cell_idx
-            rnaseq_batch = np.transpose(self.rnaseq_data[:,cell_idx])
-        if self.gencode:
-        #gencode
-            positive_gencode_batch = self.label_data_bind.iloc[data_indices,4:]
-            negative_gencode_batch = self.gencode_data[bins_batch[0,:],:]+0
-            gencode_batch = np.concatenate((np.array(positive_gencode_batch),negative_gencode_batch))
-        if not self.unique35:
-            x_fw = np.delete(x_fw,4,2)
-            x_rc = np.delete(x_rc,4,2)
-        if not self.rnaseq and not self.gencode:
-            X = [x_fw,x_rc]
-        elif self.rnaseq and self.gencode:
-            X = [x_fw,x_rc,np.concatenate((rnaseq_batch,gencode_batch),axis=1)]
-        elif self.rnaseq:
-            X = [x_fw,x_rc,rnaseq_batch]
-        elif self.gencode:
-            X = [x_fw,x_rc,gencode_batch]
-            
-        y = np.concatenate((np.zeros(x_fw_positive.shape[0])+1,np.zeros(x_fw_negative.shape[0])))
-        return X, y
-
-
-class DataGeneratorSingle(Sequence):
-    def __init__(self,genome,bw_dict_unique35,DNase_path,label_region,label_data,label_data_unbind,cell_list,rnaseq_data = 0,gencode_data=0,unique35=True,rnaseq=False,gencode=False,flanking=0,batch_size=32,ratio_negative=1):
+class DataGeneratorSingle(Iterator):
+    def __init__(self,genome,bw_dict_unique35,DNase_path,label_region,label_data,label_data_unbind,cell_list,rnaseq_data = 0,gencode_data=0,unique35=True,rnaseq=False,gencode=False,flanking=0,batch_size=32):
         label_IDs_positive = make_ID_list_single(label_region,label_data)
         self.batch_size = batch_size
         self.label_region = label_region
@@ -237,42 +171,35 @@ class DataGeneratorSingle(Sequence):
         self.rnaseq_data = rnaseq_data
         self.gencode = gencode
         self.gencode_data = gencode_data
-        self.ratio_negative = ratio_negative
         self.label_IDs_positive = label_IDs_positive
-        self.label_IDs_negative = make_ID_list_single(label_region,label_data_unbind,(label_IDs_positive.shape[0]//len(cell_list)+1)*ratio_negative)
+        self.label_IDs_negative = make_ID_list_single(label_region,label_data_unbind,(label_IDs_positive.shape[0]//len(cell_list)+1))
         self.bigwig_file_list = [DNase_path+'/' +s +'.1x.bw' for s in cell_list]
-        self.start_idx_positive = 0
-        self.start_idx_negative = 0
+        self.start_idx = 0
         self.on_epoch_end()
 
     def __len__(self):
         #Denotes the number of batches per epoch
         return self.label_IDs_positive.shape[0] // ((self.batch_size)//2)-1
 
-    def __getitem__(self, index):
+    def next(self):
         # Generate indexes of bins of the batch
-        end_idx = min([self.start_idx_positive+self.batch_size//2-1,self.label_IDs_positive.shape[0]-1])
-        positive_batch = self.label_IDs_positive[self.start_idx_positive:(end_idx+1)]
-        end_idx_negative = min(self.start_idx_negative+self.batch_size//2*self.ratio_negative-1,self.label_IDs_negative.shape[0]-1)
-        negative_batch = self.label_IDs_negative[self.start_idx_negative:(end_idx_negative+1)]
-        
-        self.start_idx_negative = end_idx_negative+1
-        self.start_idx_positive = end_idx+1
-        
+        end_idx = min([self.start_idx+self.batch_size//2-1,self.label_IDs_positive.shape[0]-1])
+        positive_batch = self.label_IDs_positive[self.start_idx:(end_idx+1)]
+        negative_batch = self.label_IDs_negative[self.start_idx:(end_idx+1)]
+        self.start_idx = end_idx+1
         # mix with equal number of negative bins
         indexes_batch = np.concatenate((positive_batch,negative_batch),axis=0)
         bins_batch = np.vstack((indexes_batch[:,0],indexes_batch[:,0],indexes_batch[:,1]))        
         # Generate data
-        X, y = self.__data_generation(bins_batch,positive_batch.shape[0],negative_batch.shape[0])
+        X, y = self.__data_generation(bins_batch)
         return X, y
 
     def on_epoch_end(self):
         np.random.shuffle(self.label_IDs_positive)
-        self.label_IDs_negative = make_ID_list_single(self.label_region,self.label_data_unbind,(self.label_IDs_positive.shape[0]//len(self.cell_list))*self.ratio_negative+1)
-        self.start_idx_positive = 0
-        self.start_idx_negative = 0
+        self.label_IDs_negative = make_ID_list_single(self.label_region,self.label_data_unbind,(self.label_IDs_positive.shape[0]//len(self.cell_list)+1))
+        self.start_idx = 0
         
-    def __data_generation(self,bins_batch,num_positive,num_negative):
+    def __data_generation(self,bins_batch):
         x_fw = make_x_batch(self.genome,self.bw_dict_unique35,self.bigwig_file_list,self.label_region,bins_batch,self.flanking)
         x_rc = make_rc_x(x_fw)
         if not self.unique35:
@@ -290,11 +217,12 @@ class DataGeneratorSingle(Sequence):
             gencode_batch = self.gencode_data[bins_batch[0,:],:]+0
             X = [x_fw,x_rc,gencode_batch]
             
-        y = np.concatenate((np.zeros(num_positive)+1,np.zeros(num_negative)))
+        y = make_y_batch(self.label_data,bins_batch)
+        y = y[:,:,0]
         return X, y
 
 
-class PredictionGeneratorSingle(Sequence):
+class PredictionGeneratorSingle(Iterator):
     def __init__(self,genome,bw_dict_unique35,DNase_file,predict_region,rnaseq_data=0,gencode_data=0,unique35=True,rnaseq=False,gencode=False,flanking=0,batch_size=32):
         self.batch_size = batch_size
         self.genome = genome
@@ -312,7 +240,7 @@ class PredictionGeneratorSingle(Sequence):
     def __len__(self):
         return int(np.ceil(self.predict_region.shape[0] / self.batch_size))
 
-    def __getitem__(self, index):
+    def next(self):
         # Generate indexes of bins of the batch
         end_idx = min([self.start_idx+self.batch_size-1,self.predict_region.shape[0]-1])
         start_bin_idx = np.array(range(self.start_idx,end_idx+1))
@@ -355,7 +283,7 @@ def make_ID_list(label_data,bin_num,bind='B'):
     label_IDs = label_IDs[np.logical_and(label_IDs[:,0]>=bin_num//2, label_IDs[:,0]+bin_num//2<=label_data.shape[0]-1)]
     return label_IDs
     
-class DataGenerator(Sequence):
+class DataGenerator(Iterator):
     def __init__(self,genome,bw_dict_unique35,DNase_path,label_data,rnaseq_data = 0,gencode_data=0,unique35=True,rnaseq=False,gencode=False,bin_num=1,flanking=0,batch_size=32,multibin=True):
         self.batch_size = batch_size
         self.label_data = label_data
@@ -457,7 +385,7 @@ def remove_pred_padding(pred,seg_array,bin_num):
     pred_final = pred[:,:,0].flatten()
     return np.delete(pred_final,id_remove)
 
-class PredictionGenerator(Sequence):
+class PredictionGenerator(Iterator):
     def __init__(self,genome,bw_dict_unique35,DNase_file,seg_array,label_data,rnaseq_data=0,gencode_data=0,unique35=True,rnaseq=False,gencode=False,bin_num=1,flanking=0,batch_size=32,multibin=True):
         self.batch_size = batch_size
         self.bin_num = bin_num

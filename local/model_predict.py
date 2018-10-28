@@ -11,8 +11,8 @@ model_file = sys.argv[1]
 cell_name = sys.argv[2]
 
 
-#model_file = '/home/chen/data/deepGRN/evaluate/models/factornet_attention.CTCF.1.401.unique35True.RNAseqFalse.GencodeFalse.h5'
-#cell_name = 'liver'
+#model_file = '/home/chen/data/deepGRN/evaluate/models/factornet_lstm.CTCF.1.401.unique35True.RNAseqTrue.GencodeTrue.h5'
+#cell_name = 'PC-3'
 
 model_name = re.sub(r'.+/(.+).h5','\\1',model_file)
 model_name1 = model_name.split('.')

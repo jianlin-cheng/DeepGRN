@@ -8,58 +8,31 @@ from pathlib import Path
 import get_model
 import utils
 
-tf_name = sys.argv[1]
-model_type = sys.argv[2]
-flanking = int(sys.argv[3])
-bin_num  = int(sys.argv[4])
-rnaseq= sys.argv[5]=='True'
-gencode= sys.argv[6]=='True'
-unique35= sys.argv[7]=='True'
-output_dir = sys.argv[8]
+tf_name = 'NANOG'
+model_type = 'factornet_lstm'
+flanking = 401
+bin_num = 1
+rnaseq = True
+gencode = True
+unique35 = True
+output_dir = '/storage/htc/bdm/ccm3x/test/'
 
-epochs  = int(sys.argv[9])
-patience = int(sys.argv[10])
-batch_size = int(sys.argv[11])
-learningrate = float(sys.argv[12])
-kernel_size = int(sys.argv[13])
-num_filters = int(sys.argv[14])
-num_recurrent = int(sys.argv[15])
-num_dense = int(sys.argv[16])
-dropout_rate = float(sys.argv[17])
-merge = sys.argv[18]
+epochs = 3
+patience = 3
+batch_size = 32
+learningrate = 0.001
+kernel_size  = 34
+num_filters = 32
+num_recurrent = 32
+num_dense = 32
+dropout_rate = 0.1
+merge = 'ave'
 
-num_conv = int(sys.argv[19])
-num_lstm = int(sys.argv[20])
-num_denselayer = int(sys.argv[21])
-ratio_negative = int(sys.argv[22])
-use_peak = int(sys.argv[23])
-
-#For testing purposes
-#tf_name = 'NANOG'
-#model_type = 'factornet_lstm'
-#flanking = 401
-#bin_num = 1
-#rnaseq = True
-#gencode = True
-#unique35 = True
-#output_dir = '/home/ccm3x/test/'
-#
-#epochs = 3
-#patience = 3
-#batch_size = 32
-#learningrate = 0.001
-#kernel_size  = 34
-#num_filters = 32
-#num_recurrent = 32
-#num_dense = 32
-#dropout_rate = 0.1
-#merge = 'ave'
-#
-#num_conv = 0
-#num_lstm = 0
-#num_denselayer = 1
-#ratio_negative = 2
-#use_peak = 0
+num_conv = 0
+num_lstm = 0
+num_denselayer = 1
+ratio_negative = 2
+use_peak = 0
 
 print(tf_name,model_type,flanking,bin_num,rnaseq,gencode,unique35,output_dir)
 print(epochs,patience,batch_size,learningrate,kernel_size,num_filters,num_recurrent,num_dense,dropout_rate,merge)
@@ -136,3 +109,5 @@ earlystopper = EarlyStopping(monitor='val_acc', patience=patience, verbose=1)
 csv_logger = CSVLogger(output_history,append=True)
 
 history = model.fit_generator(datagen_train,epochs=epochs,validation_data=datagen_val,callbacks=[checkpointer, earlystopper, csv_logger])
+
+

@@ -194,7 +194,7 @@ def build_submitted_scores_array(fname):
     df2 = df[df.chr.str.contains(r'^chr(1|8|21)$',regex=True)]
     return df2['sample'].values
 
-def score_final_main(submission_fname,label_dir):
+def score_final_main(submission_fname,label_dir,blacklist_file):
     # load and parse the submitted filename
     fname_pattern = "^[FBL]\.(.+?)\.(.+?)\.tab.gz"
     res = re.findall(fname_pattern, os.path.basename(submission_fname))
@@ -224,6 +224,10 @@ def score_final_main(submission_fname,label_dir):
     try:
         scores = build_submitted_scores_array(submission_fname)
         labels = build_ref_scores_array(labels_fname)[cell_line]
+        if blacklist_file != '':
+            blacklist_bool = np.loadtxt(blacklist_file)==0
+            scores[blacklist_bool] = 0
+            
     # JIN
         full_results = ClassificationResult(labels, scores.round(), scores)
     except:
@@ -234,7 +238,7 @@ def score_final_main(submission_fname,label_dir):
     # print scores
 
 def main():
-    parser = argparse.ArgumentParser(prog='Scoring script for ENCODE-DREAM in vivo Transcription Factor Binding Site Prediction Challenge', 
+    parser = argparse.ArgumentParser(prog='Scoring script for ENCODE-DREAM in vivo Transcription Factor Binding Site Prediction Challenge',
         description='''
         For leaderboard, use label at Files/Challenge Resources/scoring_script/labels/leaderboard.
         For final/within, use label at Files/Challenge Resources/scoring_script/labels/final.
@@ -243,11 +247,15 @@ def main():
                             help='Submission file name should match with pattern [L/F/B].[TF_NAME].[CELL_TYPE].gz.')
     parser.add_argument('label_dir', metavar='label_dir', type=str,
                             help='Directory containing label files. Label files should have a format of [TF_NAME].train.labels.tsv.gz. Download at Files/Challenge Resources/scoring_script/labels')
-   
-    args = parser.parse_args()    
+    parser.add_argument('out_file', metavar='out_file', type=str,
+                            help='output file location')
+    parser.add_argument('--blacklist_file', '-b', type=str,required=False,
+                            help='blacklist_file to use, no fitering if not provided',default='')
+    args = parser.parse_args()
     warnings.simplefilter(action='ignore', category=UserWarning)
-    results, labels, scores = score_final_main(args.submission_fname,args.label_dir)
-    print results
+    results, labels, scores = score_final_main(args.submission_fname,args.label_dir,args.blacklist_file)
+    f = open(args.out_file,'w')
+    print >>f,results
 
 if __name__ == '__main__':
     main()
@@ -257,3 +265,4 @@ python score.py ~/F.HNF4A.liver.tab.gz /mnt/data/TF_binding/DREAM_challenge/all_
 python score.py ~/B.HNF4A.liver.tab.gz /mnt/data/TF_binding/DREAM_challenge/all_labels/within
 python score.py ~/L.CTCF.GM12878.tab.gz /mnt/data/TF_binding/DREAM_challenge/all_labels/leaderboard
 '''
+

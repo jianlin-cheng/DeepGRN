@@ -1,21 +1,19 @@
+import re
 import numpy as np
 import pandas as pd
-import sys
-import re
-from keras.models import load_model
+import os
+os.environ['KERAS_BACKEND'] = 'theano'
 
-import get_model
+from keras.models import model_from_json
+
 import utils
-#import itertools
-#from pybedtools import BedTool
+#import get_model
 
-model_file = sys.argv[1]
-cell_name = sys.argv[2]
-output_predict_path = sys.argv[3]
-
-#model_file = '/storage/htc/bdm/ccm3x/deepGRN/evaluate_factornet/models/onePeak_Unique35_DGF.TAF1.1.401.unique35True.RNAseqFalse.GencodeFalse.h5'
-#cell_name = 'liver'
-#output_predict_path = '/storage/htc/bdm/ccm3x/deepGRN/evaluate_chr11/predictions/'
+model_file = '/storage/htc/bdm/ccm3x/deepGRN/results/evaluate_factornet/models/metaGENCODE_RNAseq_Unique35_DGF.CTCF.1.401.unique35True.RNAseqTrue.GencodeTrue.h5'
+model_json_file = '/storage/htc/bdm/ccm3x/deepGRN/results/evaluate_factornet/models/metaGENCODE_RNAseq_Unique35_DGF.CTCF.1.401.unique35True.RNAseqTrue.GencodeTrue.json'
+cell_name = 'PC-3'
+output_predict_path = '/storage/htc/bdm/ccm3x/deepGRN/results/evaluate_factornet/predictions/'
+data_dir = '/storage/htc/bdm/ccm3x/deepGRN/'
 
 
 model_name = re.sub(r'.+/(.+).h5','\\1',model_file)
@@ -29,7 +27,6 @@ gencode= model_name1[6]=='GencodeTrue'
 
 print(tf_name,model_name,bin_num,cell_name,unique35,rnaseq,gencode)
 
-data_dir = '/storage/htc/bdm/ccm3x/deepGRN/'
 genome_fasta_file = data_dir+'raw/hg19.genome.fa'
 DNase_path =data_dir+ 'raw/DNase/'
 bigwig_file_unique35 = data_dir + 'raw/wgEncodeDukeMapabilityUniqueness35bp.bigWig'
@@ -38,7 +35,6 @@ gencode_file = data_dir + 'raw/gencode_feature_val.tsv'
 
 
 predict_region_file = data_dir + 'raw/label/test_regions.blacklistfiltered.bed'
-bed_merge_file = data_dir + 'raw/label/test_regions.blacklistfiltered.merged.bed'
 
 
 pred_chr = ['chr1','chr8','chr21']
@@ -49,9 +45,6 @@ pred_idx = predict_region[0].isin(pred_chr)
 predict_region = predict_region[pred_idx]
 predict_region.index = range(predict_region.shape[0])
 
-bed_merge = pd.read_csv(bed_merge_file, sep='\t', header=None)
-bed_merge = bed_merge[bed_merge[0].isin(pred_chr)]
-bed_merge.index = range(bed_merge.shape[0])
 
 DNase_file = DNase_path+cell_name+'.1x.bw'
 
@@ -65,16 +58,19 @@ if rnaseq:
     rnaseq_pred = rnaseq_data[pred_cell_list].values
 
 if gencode:
-    gencode_pred = pd.read_csv(gencode_file, sep='\t', header=None,dtype=np.bool_)
+    gencode_pred = pd.read_csv(gencode_file, sep='\t', header=None,dtype=utils.np.bool_)
     gencode_pred = gencode_pred[pred_idx].values
     
-
-model = load_model(model_file,custom_objects={'Attention1D': get_model.Attention1D})
+#model = load_model(model_file,custom_objects={'Attention1D': get_model.Attention1D})
+model_json_fp = open(model_json_file, 'r')
+model_json = model_json_fp.read()
+model = model_from_json(model_json)
+model.load_weights(model_file)
 
 datagen_pred = utils.PredictionGeneratorSingle(genome,bw_dict_unique35,DNase_file,predict_region,rnaseq_pred,gencode_pred,unique35,rnaseq,gencode,flanking,batch_size)
-pred = model.predict_generator(datagen_pred,verbose=1)
+pred = model.predict_generator(datagen_pred,val_samples=300000)
 pred_final = pred.flatten()
+np.savetxt(output_predict_path+tf_name+'.'+cell_name+'.'+model_name1[0]+ '_batch32_test.unique35'+str(unique35)+ '.RNAseq'+str(rnaseq)+ '.Gencode'+str(gencode)+'.csv', pred_final, delimiter=",")
 
-np.savetxt(output_predict_path+tf_name+'_'+cell_name+'_'+model_name1[0]+ '.unique35'+str(unique35)+ '.RNAseq'+str(rnaseq)+ '.Gencode'+str(gencode)+'.csv', pred_final, delimiter=",")
 
 

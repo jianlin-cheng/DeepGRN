@@ -3,7 +3,7 @@ import re
 import numpy as np
 import pandas as pd
 from keras.models import load_model
-
+import os
 import utils
 import get_model
 
@@ -11,9 +11,9 @@ model_file = sys.argv[1]
 cell_name = sys.argv[2]
 output_predict_path = sys.argv[3]
 
-#model_file = '/storage/htc/bdm/ccm3x/deepGRN/evaluate_chr11/models/factornet_attention.CTCF.1.401.unique35True.RNAseqFalse.GencodeFalse.h5'
+#model_file = '/storage/htc/bdm/ccm3x/deepGRN/results/evaluate_factornet/models/GENCODE_Unique35_DGF_2.REST.1.401.unique35True.RNAseqFalse.GencodeTrue.h5'
 #cell_name = 'liver'
-#output_predict_path = '/storage/htc/bdm/ccm3x/deepGRN/evaluate_chr11/predictions/'
+#output_predict_path = '/storage/htc/bdm/ccm3x/deepGRN/results/evaluate_factornet/predictions/'
 
 model_name = re.sub(r'.+/(.+).h5','\\1',model_file)
 model_name1 = model_name.split('.')
@@ -31,12 +31,10 @@ genome_fasta_file = data_dir+'raw/hg19.genome.fa'
 DNase_path =data_dir+ 'raw/DNase/'
 bigwig_file_unique35 = data_dir + 'raw/wgEncodeDukeMapabilityUniqueness35bp.bigWig'
 rnaseq_data_file = data_dir + 'raw/rnaseq_data.csv'
-gencode_file = data_dir + 'raw/gencode_feature_val.tsv'
+gencode_file = data_dir + 'raw/gencode_feature_test.tsv'
 
 
-predict_region_file = data_dir + 'raw/label/test_regions.blacklistfiltered.bed'
-bed_merge_file = data_dir + 'raw/label/test_regions.blacklistfiltered.merged.bed'
-
+predict_region_file = data_dir + 'raw/label/predict_region.bed'
 
 pred_chr = ['chr1','chr8','chr21']
 batch_size = 32
@@ -46,9 +44,6 @@ pred_idx = predict_region[0].isin(pred_chr)
 predict_region = predict_region[pred_idx]
 predict_region.index = range(predict_region.shape[0])
 
-bed_merge = pd.read_csv(bed_merge_file, sep='\t', header=None)
-bed_merge = bed_merge[bed_merge[0].isin(pred_chr)]
-bed_merge.index = range(bed_merge.shape[0])
 
 DNase_file = DNase_path+cell_name+'.1x.bw'
 
@@ -72,8 +67,9 @@ datagen_pred = utils.PredictionGeneratorSingle(genome,bw_dict_unique35,DNase_fil
 pred = model.predict_generator(datagen_pred,verbose=1)
 pred_final = pred.flatten()
 
-np.savetxt(output_predict_path+tf_name+'_'+cell_name+'_'+model_name1[0]+ '.unique35'+str(unique35)+ '.RNAseq'+str(rnaseq)+ '.Gencode'+str(gencode)+'.csv', pred_final, delimiter=",")
-
+pred_out = pd.concat([predict_region,pd.DataFrame(pred_final)],axis=1)
+#np.savetxt(, pred_final, delimiter=",")
+pred_out.to_csv(output_predict_path+'/F.'+tf_name+'.'+cell_name+'.tab.gz',sep='\t',header=False,index=False,compression='gzip')
 
 
 
