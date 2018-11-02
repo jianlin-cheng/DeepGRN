@@ -2,7 +2,7 @@ from keras.engine.topology import Layer
 from keras import backend as K
 from keras.layers import Softmax, Multiply, Lambda, Activation
 from keras.models import Model
-from keras.layers import Dense, Dropout, Flatten, Average, Input,Concatenate,Maximum
+from keras.layers import Dense, Dropout, Flatten, Average, Input,Concatenate,Maximum,CuDNNLSTM
 from keras.layers.convolutional import Convolution1D, MaxPooling1D
 from keras.layers.recurrent import LSTM
 from keras.layers.wrappers import Bidirectional, TimeDistributed
@@ -22,7 +22,7 @@ class Attention1D(Layer):
     def call(self,x):
         attention_prob=Softmax(axis=1)(x)
         context= Multiply()([attention_prob,x])
-        out=Lambda(lambda x: K.sum(x,axis=1))(context)     
+        out=Lambda(lambda x: K.sum(x,axis=1))(context)
         return Activation('relu')(K.dot(out, self.kernel))
         
     def get_config(self):
@@ -38,7 +38,8 @@ def get_output(input_layer, hidden_layers):
         output = hidden_layer(output)
     return output
 
-def make_model(model,L=None,n_channel=6, num_conv = 0,num_lstm = 0,num_denselayer=0,kernel_size=34,num_filters=128, num_recurrent=64, num_dense=128, dropout_rate=0.5, num_meta=8,merge='ave'):
+def make_model(model,L=None,n_channel=6, num_conv = 0,num_lstm = 0,num_denselayer=0,kernel_size=34,num_filters=128,
+               num_recurrent=64, num_dense=128, dropout_rate=0.5, num_meta=8,merge='ave',cudnn=False):
     forward_input = Input(shape=(L, n_channel,))
     reverse_input = Input(shape=(L, n_channel,))
     hidden_layers = [Convolution1D(input_shape=(None, n_channel), filters=num_filters,kernel_size=kernel_size, padding='valid', activation='relu',strides=1),
@@ -48,7 +49,10 @@ def make_model(model,L=None,n_channel=6, num_conv = 0,num_lstm = 0,num_denselaye
         hidden_layers.append(Dropout(dropout_rate))
     hidden_layers.append(TimeDistributed(Dense(num_filters, activation='relu')))
     hidden_layers.append(MaxPooling1D(pool_size=kernel_size//2, strides=kernel_size//2))
-    hidden_layers.append(Bidirectional(LSTM(num_recurrent, dropout=dropout_rate, recurrent_dropout=0.1, return_sequences=True)))
+    if not cudnn:
+        hidden_layers.append(Bidirectional(LSTM(num_recurrent, dropout=dropout_rate, recurrent_dropout=0.1, return_sequences=True)))
+    else:
+        hidden_layers.append(Bidirectional(CuDNNLSTM(num_recurrent, return_sequences=True)))
     hidden_layers.append(Dropout(dropout_rate))
     for i in range(num_lstm):
         hidden_layers.append(Bidirectional(LSTM(num_recurrent, dropout=dropout_rate, recurrent_dropout=0.1, return_sequences=True)))

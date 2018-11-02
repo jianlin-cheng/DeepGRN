@@ -3,16 +3,21 @@ args = commandArgs(T)
 tf_name = args[1]
 output_all_path = args[2]
 use_peak = as.numeric(args[3])
+use_cudnn = as.numeric(args[4])
+
+# tf_name= 'CTCF'
+# output_all_path = '/storage/htc/bdm/ccm3x/deepGRN/results_new/'
+# use_peak = 0
+# use_cudnn = 1
+
 num_hyperparameter_sets = 60
 
 set.seed(2018)
 
-library(data.table)
 setwd('/storage/htc/bdm/ccm3x/deepGRN/logs')
 final_label_path = '/storage/htc/bdm/ccm3x/deepGRN/raw/label/final/'
-final_label_path1 = '/storage/htc/bdm/ccm3x/deepGRN/raw/label/final_unzip/'
 
-model_names = c('factornet_lstm','factornet_attention')
+model_names = c('factornet_attention','factornet_lstm')
 flanking = 401
 bin_num = 1
 use_rnaseq = c('True')
@@ -49,9 +54,11 @@ d1 <- d[sample(1:nrow(d),num_hyperparameter_sets),]
 rownames(d1) <- NULL
 write.csv(d1,paste0(output_path,'hyperparameters.csv'))
 
-label_file <- paste0(final_label_path1,tf_name,'.train.labels.tsv')
-final_label1 <- fread(label_file,header = T,nrows = 3)
-final_cell_name <- colnames(final_label1)[4]
+label_file <- paste0(final_label_path,tf_name,'.train.labels.tsv')
+h <- read.delim(label_file,header = F,nrows = 1,as.is = T)
+cell_names <- as.character(h)[4:ncol(h)]
+final_cell_name <- cell_names[1]
+
 for(i in 1:nrow(d1)){
   for(model_name in model_names){
     output_path_set <- paste0(output_path,model_name,'.set',i,'/')
@@ -67,8 +74,14 @@ for(i in 1:nrow(d1)){
                       pred_file,score_file,
                       paste(d1[i,17:21],collapse =' '))
     setwd(output_path_set)
-    print(paste('sbatch /storage/htc/bdm/ccm3x/deepGRN/src/batch/model_train_predict_evaluate.sh',
-                 all_args,paste0(output_all_path,tf_name,'/'),collapse = ' '))
+    if(use_cudnn == 0){
+      system(paste('sbatch /storage/htc/bdm/ccm3x/deepGRN/src/batch/model_train_predict_evaluate.sh',
+                  all_args,paste0(output_all_path,tf_name,'/'),collapse = ' '))
+    }else{
+      system(paste('sbatch /storage/htc/bdm/ccm3x/deepGRN/src/batch/cudnn_model_train_predict_evaluate.sh',
+                   all_args,paste0(output_all_path,tf_name,'/'),collapse = ' '))
+    }
+
   }
 }
 

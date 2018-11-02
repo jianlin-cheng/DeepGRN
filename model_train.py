@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 import pandas as pd
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from keras.optimizers import Adam
@@ -35,8 +36,8 @@ ratio_negative = int(sys.argv[22])
 use_peak = int(sys.argv[23])
 
 #For testing purposes
-#tf_name = 'NANOG'
-#model_type = 'factornet_lstm'
+#tf_name = 'CTCF'
+#model_type = 'factornet_attention'
 #flanking = 401
 #bin_num = 1
 #rnaseq = True
@@ -46,20 +47,22 @@ use_peak = int(sys.argv[23])
 #
 #epochs = 3
 #patience = 3
-#batch_size = 32
-#learningrate = 0.001
+#batch_size = 64
+#learningrate = 0.01
 #kernel_size  = 34
-#num_filters = 32
+#num_filters = 64
 #num_recurrent = 32
-#num_dense = 32
+#num_dense = 64
 #dropout_rate = 0.1
 #merge = 'ave'
 #
 #num_conv = 0
 #num_lstm = 0
 #num_denselayer = 1
-#ratio_negative = 2
+#ratio_negative = 5
 #use_peak = 0
+
+np.random.seed(2018)
 
 print(tf_name,model_type,flanking,bin_num,rnaseq,gencode,unique35,output_dir)
 print(epochs,patience,batch_size,learningrate,kernel_size,num_filters,num_recurrent,num_dense,dropout_rate,merge)

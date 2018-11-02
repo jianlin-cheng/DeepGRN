@@ -1,12 +1,16 @@
 DATAPATH=/storage/htc/bdm/ccm3x/deepGRN/raw/
 
-module load python/python-2.7.12
+module load module load python/python-3.6.6-tk
 module load samtools
 module load atlas/atlas-3.10.2
 module load bedtools/bedtools-2.26.0
 
-pip install numpy pandas h5py theano==0.9.0
-pip install pybedtools pyfasta pyBigWig parmap keras==1.2.2 deeptools==2.5.4
+python -m venv my_env
+source my_env/bin/activate
+pip install numpy pandas h5py sklearn rpy2
+pip install tensorflow-gpu
+#pip install tensorflow
+pip install pybedtools pyfasta pyBigWig parmap keras deeptools==2.5.4
 
 
 mkdir -p $DATAPATHbams
