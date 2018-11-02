@@ -1,4 +1,4 @@
-cell_num_control =T
+cell_num_control = T
 
 data_path = '/home/chen/data/deepGRN/raw/'
 script_path_train = '/home/chen/py_env/py3_tf/bin/python /home/chen/Dropbox/MU/workspace/encode_dream/src/local/train.py'
@@ -9,7 +9,7 @@ tf_name= 'CTCF'
 output_all_path = '/home/chen/data/deepGRN/test/'
 use_peak = 1
 use_cudnn = 1
-ratio_negative_upper_bound = 9
+ratio_negative_upper_bound = 2
 num_hyperparameter_sets = 60
 
 set.seed(2018)
@@ -93,24 +93,33 @@ for(i in 1:nrow(par_sets_all)){
     if(use_cudnn == 1){
       all_args <- paste(all_args,'--use_cudnn')
     }
-    command_run <- paste(script_path_train,all_args)
+    command_train <- paste(script_path_train,all_args)
     
-    #predict
+    #predict and score
+    command_predict <- command_score <- command_score_bl <- ''
     model_file <- paste0(output_path_set,model_name,'.',tf_name,'.1.',par_sets$flanking,
-                         '.unique35',par_sets$use_unique35,'RNAseq',par_sets$use_rnaseq,'.Gencode',par_sets$use_gencode,'.h5')
+                         '.unique35',par_sets$use_unique35,'.RNAseq',par_sets$use_rnaseq,'.Gencode',par_sets$use_gencode,'.h5')
     for(final_cell_name in cell_names){
       all_args_predict <- paste0('-i ',data_path,' -m ',model_file,' -c ',final_cell_name,
                                  ' -p ',pred_region_file,' -o ',output_path_set)
-      command_run <- paste0(command_run,';',script_path_predict,' ',all_args_predict)
+      command_predict <- paste0(command_predict,script_path_predict,' ',all_args_predict,';')
+
       pred_result_file <- paste0(output_path_set,'F.',tf_name,'.',final_cell_name,'.tab.gz')
-      
       all_args_score <- paste0(pred_result_file,' ',final_label_all_path,' ',output_path_set,final_cell_name,'.performance.txt')
       all_args_score_bl <- paste0(pred_result_file,' ',final_label_all_path,' ',output_path_set,final_cell_name,'.performance.txt.blacklisted -b ',black_list_bool)
-      command_run <- paste0(command_run,';',script_path_score,' ',all_args_score,';',
-                            script_path_score,' ',all_args_score_bl)
+      command_score <- paste0(command_score,script_path_score,' ',all_args_score,';')
+      command_score_bl <- paste0(command_score_bl,script_path_score,' ',all_args_score_bl,';')
     }
-    if(par_sets$ratio_negative < ratio_negative_upper_bound){
-      system(command_run)
+    if(i>1 & par_sets$ratio_negative < ratio_negative_upper_bound){
+      print(output_path_set)
+      print(command_train)
+      # system(command_train)
+      print(command_predict)
+      # system(command_predict)      
+      print(command_score)
+      # system(command_score)
+      print(command_score_bl)
+      # system(command_score_bl)
     }
   }
 }

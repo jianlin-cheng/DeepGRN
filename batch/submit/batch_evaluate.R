@@ -4,7 +4,7 @@ tf_name = args[1]
 output_all_path = args[2]
 
 tf_name = 'CTCF'
-output_all_path = '/storage/htc/bdm/ccm3x/deepGRN/results_original/'
+output_all_path = '/storage/htc/bdm/ccm3x/deepGRN/results_new/'
 
 setwd('/storage/htc/bdm/ccm3x/deepGRN/logs/')
 tf_path <- paste0(output_all_path,tf_name)
