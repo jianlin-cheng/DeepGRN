@@ -4,6 +4,7 @@ from keras.utils import Sequence
 
 import pyBigWig
 from pyfaidx import Fasta
+from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 
 #import itertools
 #from pybedtools import BedTool
@@ -141,8 +142,10 @@ def make_x_batch_positive(genome,bigwig_file_unique35,bigwig_file_list,label_dat
         x_batch[i,:,:] = make_x(genome,bigwig_file_unique35,bigwig_file,seq_start,seq_end,flanking,chr_id) 
     return x_batch
 
-class TrainGeneratorSingle(Sequence):
-    def __init__(self,genome,bigwig_file_unique35,DNase_path,label_region,label_data_bind,label_data_unbind,cell_list,rnaseq_data = 0,gencode_data=0,use_shift=False,unique35=True,rnaseq=False,gencode=False,flanking=0,batch_size=32,ratio_negative=1):
+class TrainGeneratorSingle_augmented(Sequence):
+    def __init__(self,genome,bigwig_file_unique35,DNase_path,label_region,label_data_bind,label_data_unbind,
+                 cell_list,rnaseq_data = 0,gencode_data=0,use_shift=False,unique35=True,rnaseq=False,gencode=False,
+                 flanking=0,batch_size=32,ratio_negative=1,double_strand=True):
         self.batch_size = batch_size
         self.label_region = label_region
         self.label_data_bind = label_data_bind
@@ -158,6 +161,7 @@ class TrainGeneratorSingle(Sequence):
         self.gencode = gencode
         self.gencode_data = gencode_data
         self.ratio_negative = ratio_negative
+        self.double_strand = double_strand
         self.label_IDs_negative = make_ID_list_single(label_region,label_data_unbind,(label_data_bind.shape[0]//len(cell_list)+1)*ratio_negative)
         self.bigwig_file_list = [DNase_path+'/' +s +'.1x.bw' for s in cell_list]
         self.start_idx_positive = 0
@@ -208,21 +212,25 @@ class TrainGeneratorSingle(Sequence):
         if not self.unique35:
             x_fw = np.delete(x_fw,4,2)
             x_rc = np.delete(x_rc,4,2)
-        if not self.rnaseq and not self.gencode:
+        if self.double_strand:
             X = [x_fw,x_rc]
-        elif self.rnaseq and self.gencode:
-            X = [x_fw,x_rc,np.concatenate((rnaseq_batch,gencode_batch),axis=1)]
-        elif self.rnaseq:
-            X = [x_fw,x_rc,rnaseq_batch]
-        elif self.gencode:
-            X = [x_fw,x_rc,gencode_batch]
+        else:
+            X = [x_fw]
             
+        if self.rnaseq and self.gencode:
+            X.append(np.concatenate((rnaseq_batch,gencode_batch),axis=1))
+        elif self.rnaseq:
+            X.append(rnaseq_batch)
+        elif self.gencode:
+            X.append(gencode_batch)
         y = np.concatenate((np.zeros(x_fw_positive.shape[0])+1,np.zeros(x_fw_negative.shape[0])))
         return X, y
 
 
-class DataGeneratorSingle(Sequence):
-    def __init__(self,genome,bw_dict_unique35,DNase_path,label_region,label_data,label_data_unbind,cell_list,rnaseq_data = 0,gencode_data=0,unique35=True,rnaseq=False,gencode=False,flanking=0,batch_size=32,ratio_negative=1):
+class TrainGeneratorSingle(Sequence):
+    def __init__(self,genome,bw_dict_unique35,DNase_path,label_region,label_data,label_data_unbind,cell_list,
+                 rnaseq_data = 0,gencode_data=0,unique35=True,rnaseq=False,gencode=False,flanking=0,batch_size=32,
+                 ratio_negative=1,double_strand=True):
         label_IDs_positive = make_ID_list_single(label_region,label_data)
         self.batch_size = batch_size
         self.label_region = label_region
@@ -238,6 +246,7 @@ class DataGeneratorSingle(Sequence):
         self.gencode = gencode
         self.gencode_data = gencode_data
         self.ratio_negative = ratio_negative
+        self.double_strand = double_strand        
         self.label_IDs_positive = label_IDs_positive
         self.label_IDs_negative = make_ID_list_single(label_region,label_data_unbind,(label_IDs_positive.shape[0]//len(cell_list)+1)*ratio_negative)
         self.bigwig_file_list = [DNase_path+'/' +s +'.1x.bw' for s in cell_list]
@@ -278,24 +287,29 @@ class DataGeneratorSingle(Sequence):
         if not self.unique35:
             x_fw = np.delete(x_fw,4,2)
             x_rc = np.delete(x_rc,4,2)
-        if not self.rnaseq and not self.gencode:
+        if self.double_strand:
             X = [x_fw,x_rc]
-        elif self.rnaseq and self.gencode:
+        else:
+            X = [x_fw]
+            
+        if self.rnaseq and self.gencode:
             rnaseq_batch = np.transpose(self.rnaseq_data[:,bins_batch[2,:]])
             gencode_batch = self.gencode_data[bins_batch[0,:],:]+0
-            X = [x_fw,x_rc,np.concatenate((rnaseq_batch,gencode_batch),axis=1)]
+            X.append(np.concatenate((rnaseq_batch,gencode_batch),axis=1))
         elif self.rnaseq:
-            X = [x_fw,x_rc,np.transpose(self.rnaseq_data[:,bins_batch[2,:]])]
+            rnaseq_batch = np.transpose(self.rnaseq_data[:,bins_batch[2,:]])
+            X.append(rnaseq_batch)
         elif self.gencode:
             gencode_batch = self.gencode_data[bins_batch[0,:],:]+0
-            X = [x_fw,x_rc,gencode_batch]
+            X.append(gencode_batch)   
             
         y = np.concatenate((np.zeros(num_positive)+1,np.zeros(num_negative)))
         return X, y
 
 
 class PredictionGeneratorSingle(Sequence):
-    def __init__(self,genome,bw_dict_unique35,DNase_file,predict_region,rnaseq_data=0,gencode_data=0,unique35=True,rnaseq=False,gencode=False,flanking=0,batch_size=32):
+    def __init__(self,genome,bw_dict_unique35,DNase_file,predict_region,rnaseq_data=0,gencode_data=0,unique35=True,
+                 rnaseq=False,gencode=False,flanking=0,batch_size=32,double_strand=True):
         self.batch_size = batch_size
         self.genome = genome
         self.unique35 = unique35
@@ -308,6 +322,7 @@ class PredictionGeneratorSingle(Sequence):
         self.predict_region = predict_region
         self.bigwig_file_list = [DNase_file]
         self.start_idx = 0
+        self.double_strand = double_strand
 
     def __len__(self):
         return int(np.ceil(self.predict_region.shape[0] / self.batch_size))
@@ -329,16 +344,27 @@ class PredictionGeneratorSingle(Sequence):
         if not self.unique35:
             x_fw = np.delete(x_fw,4,2)
             x_rc = np.delete(x_rc,4,2)
-        if not self.rnaseq and not self.gencode:
+        if self.double_strand:
             X = [x_fw,x_rc]
-        elif self.rnaseq and self.gencode:
+        else:
+            X = [x_fw]
+
+        if self.rnaseq and self.gencode:
             rnaseq_batch = np.transpose(self.rnaseq_data[:,bins_batch[2,:]])
             gencode_batch = self.gencode_data[bins_batch[0,:],:]+0
-            X = [x_fw,x_rc,np.concatenate((rnaseq_batch,gencode_batch),axis=1)]
+            X.append(np.concatenate((rnaseq_batch,gencode_batch),axis=1))
         elif self.rnaseq:
-            X = [x_fw,x_rc,np.transpose(self.rnaseq_data[:,bins_batch[2,:]])]
+            rnaseq_batch = np.transpose(self.rnaseq_data[:,bins_batch[2,:]])
+            X.append(rnaseq_batch)
         elif self.gencode:
             gencode_batch = self.gencode_data[bins_batch[0,:],:]+0
-            X = [x_fw,x_rc,gencode_batch]
+            X.append(gencode_batch)  
+            
         return X
 
+
+def calc_metrics(y_true,y_score):
+    precision, recall, _ = precision_recall_curve(y_true, y_score)
+    auprc = auc(recall, precision)
+    auroc = roc_auc_score(y_true, y_score)
+    return auroc,auprc

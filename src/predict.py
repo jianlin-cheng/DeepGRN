@@ -1,5 +1,6 @@
 import re
 import argparse
+import numpy as np
 import pandas as pd
 from keras.models import load_model
 
@@ -17,6 +18,8 @@ def make_argument_parser():
 
     parser.add_argument('--output_predict_path', '-o', type=str, required=True,help='output_predict_path')
     parser.add_argument('--batch_size', '-b', type=int, required=False,help='batch_size',default=32)
+    parser.add_argument('--blacklist_file', '-l', type=str,required=False,
+                        help='blacklist_file to use, no fitering if not provided',default='')
     return parser
 
 def main():
@@ -29,8 +32,8 @@ def main():
     predict_region_file = args.predict_region_file
     output_predict_path = args.output_predict_path
     batch_size = args.batch_size
+    blacklist_file = args.blacklist_file
 
-    model_name = re.sub(r'.+/(.+).h5','\\1',model_file)
     model = load_model(model_file,custom_objects={'Attention1D': get_model.Attention1D})
     model_inputs = model.get_input_shape_at(0)
     
@@ -58,7 +61,6 @@ def main():
     window_size = predict_region[2][0] - predict_region[1][0]
     flanking = (model_inputs[0][1] - window_size) //2
     
-    print(output_predict_path,model_name,cell_name,unique35,rnaseq,gencode)
 
     genome_fasta_file = data_dir+'/hg19.genome.fa'
     DNase_path =data_dir+ '/DNase/'
@@ -82,10 +84,21 @@ def main():
     datagen_pred = utils.PredictionGeneratorSingle(genome,bigwig_file_unique35,DNase_file,predict_region,rnaseq_pred,gencode_pred,unique35,rnaseq,gencode,flanking,batch_size)
     pred = model.predict_generator(datagen_pred,verbose=1)
     pred_final = pred.flatten()
-    
+    if blacklist_file != '':
+        blacklist_bool = np.loadtxt(blacklist_file)==0
+        pred_final[blacklist_bool] = 0
+        
     pred_out = pd.concat([predict_region,pd.DataFrame(pred_final)],axis=1)
     pred_out.to_csv(output_predict_path,sep='\t',header=False,index=False,compression='gzip')
 
 
 if __name__ == '__main__':
     main()
+
+#For testing purposes
+#data_dir = '/home/chen/data/deepGRN/raw'
+#model_file = '/home/chen/data/deepGRN/test/CTCF/factornet_attention.set1/factornet_attention.CTCF.1.401.unique35True.RNAseqTrue.GencodeTrue.h5'
+#batch_size = 32
+#cell_name = 'PC-3'
+#predict_region_file = '/home/chen/data/deepGRN/raw/label/predict_region.bed'
+#output_predict_path = '/home/chen/data/deepGRN/test/CTCF/factornet_attention.set1/F.CTCF.PC-3.tab.gz'
