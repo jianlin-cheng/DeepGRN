@@ -32,7 +32,6 @@ tensorflow-gpu 1.11.0
 ## Training (train.py)
 Train models for TF binding site prediction:
 
-### Arguments
 
 ```
 usage: train.py [-h] --data_dir DATA_DIR --tf_name TF_NAME --output_dir
@@ -51,7 +50,8 @@ usage: train.py [-h] --data_dir DATA_DIR --tf_name TF_NAME --output_dir
                 [--random_seed RANDOM_SEED]
 ```                
 
-optional arguments:
+### Arguments
+
 * `-h, --help`            show this help message and exit
 * `--data_dir DATA_DIR, -i DATA_DIR`
                         data_dir
@@ -112,7 +112,6 @@ optional arguments:
 
 Use models trained from train.py for new data prediction:
 
-### Arguments
 
 ```
 usage: predict.py [-h] --data_dir DATA_DIR --model_file MODEL_FILE --cell_name
@@ -123,7 +122,8 @@ usage: predict.py [-h] --data_dir DATA_DIR --model_file MODEL_FILE --cell_name
 
 Predict a model.
 
-optional arguments:
+### Arguments
+
 * `-h, --help`            show this help message and exit
 * `--data_dir DATA_DIR, -i DATA_DIR`
                         data_dir
