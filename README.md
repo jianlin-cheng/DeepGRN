@@ -34,6 +34,7 @@ Train models for TF binding site prediction:
 
 ### Arguments
 
+```
 usage: train.py [-h] --data_dir DATA_DIR --tf_name TF_NAME --output_dir
                 OUTPUT_DIR [--attention_position ATTENTION_POSITION]
                 [--flanking FLANKING] [--val_chr VAL_CHR] [--epochs EPOCHS]
@@ -48,62 +49,63 @@ usage: train.py [-h] --data_dir DATA_DIR --tf_name TF_NAME --output_dir
                 [--unique35] [--use_peak] [--use_cudnn]
                 [--single_attention_vector] [--plot_model]
                 [--random_seed RANDOM_SEED]
+```                
 
 optional arguments:
 * `-h, --help`            show this help message and exit
-* `data_dir DATA_DIR, -i DATA_DIR`
+* `--data_dir DATA_DIR, -i DATA_DIR`
                         data_dir
-* `tf_name TF_NAME, -t TF_NAME`
+* `--tf_name TF_NAME, -t TF_NAME`
                         tf_name
-* `output_dir OUTPUT_DIR, -o OUTPUT_DIR`
+* `--output_dir OUTPUT_DIR, -o OUTPUT_DIR`
                         output_dir
-* `attention_position ATTENTION_POSITION, -ap ATTENTION_POSITION`
+* `--attention_position ATTENTION_POSITION, -ap ATTENTION_POSITION`
                         Position of attention layers, can be attention1d_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm
-* `flanking FLANKING, -f FLANKING`
+* `--flanking FLANKING, -f FLANKING`
                         flanking
-* `val_chr VAL_CHR, -v VAL_CHR`
+* `--val_chr VAL_CHR, -v VAL_CHR`
                         val_chr
-* `epochs EPOCHS, -e EPOCHS`
+* `--epochs EPOCHS, -e EPOCHS`
                         epochs
-* `patience PATIENCE, -p PATIENCE`
+* `--patience PATIENCE, -p PATIENCE`
                         patience
-* `batch_size BATCH_SIZE, -s BATCH_SIZE`
+* `--batch_size BATCH_SIZE, -s BATCH_SIZE`
                         batch_size
-* `learningrate LEARNINGRATE, -l LEARNINGRATE`
+* `--learningrate LEARNINGRATE, -l LEARNINGRATE`
                         learningrate
-* `kernel_size KERNEL_SIZE, -k KERNEL_SIZE`
+* `--kernel_size KERNEL_SIZE, -k KERNEL_SIZE`
                         kernel_size for Conv1D
-* `num_filters NUM_FILTERS, -nf NUM_FILTERS`
+* `--num_filters NUM_FILTERS, -nf NUM_FILTERS`
                         num_filters for Conv1D
-* `num_recurrent NUM_RECURRENT, -nr NUM_RECURRENT`
+* `--num_recurrent NUM_RECURRENT, -nr NUM_RECURRENT`
                         Output dim for LSTM
-* `num_dense NUM_DENSE, -nd NUM_DENSE`
+* `--num_dense NUM_DENSE, -nd NUM_DENSE`
                         Output dim for dense layers
-* `dropout_rate DROPOUT_RATE, -d DROPOUT_RATE`
+* `--dropout_rate DROPOUT_RATE, -d DROPOUT_RATE`
                         dropout_rate for all layers except LSTM
-* `rnn_dropout1 RNN_DROPOUT1, -rd1 RNN_DROPOUT1`
+* `--rnn_dropout1 RNN_DROPOUT1, -rd1 RNN_DROPOUT1`
                         dropout_rate for LSTM
-* `rnn_dropout2 RNN_DROPOUT2, -rd2 RNN_DROPOUT2`
+* `--rnn_dropout2 RNN_DROPOUT2, -rd2 RNN_DROPOUT2`
                         rnn_dropout_rate for LSTM
-* `merge MERGE, -me MERGE`
+* `--merge MERGE, -me MERGE`
                         merge method, max or ave
-* `num_conv NUM_CONV, -nc NUM_CONV`
+* `--num_conv NUM_CONV, -nc NUM_CONV`
                         Number of Conv1D layers
-* `num_lstm NUM_LSTM, -nl NUM_LSTM`
+* `--num_lstm NUM_LSTM, -nl NUM_LSTM`
                         Number of LSTM layers
-* `num_denselayer NUM_DENSELAYER, -dl NUM_DENSELAYER`
+* `--num_denselayer NUM_DENSELAYER, -dl NUM_DENSELAYER`
                         Number of additional dense layers
-* `ratio_negative RATIO_NEGATIVE, -rn RATIO_NEGATIVE`
+* `--ratio_negative RATIO_NEGATIVE, -rn RATIO_NEGATIVE`
                         Ratio of negative samples to positive samples in each epoch
-* `rnaseq, -r`          rnaseq
-* `gencode, -g`         gencode
-* `unique35, -u`        unique35
-* `use_peak, -a`        use_peak
-* `use_cudnn, -c`       use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts
-* `single_attention_vector, -sa`
+* `--rnaseq, -r`          rnaseq
+* `--gencode, -g`         gencode
+* `--unique35, -u`        unique35
+* `--use_peak, -a`        use_peak
+* `--use_cudnn, -c`       use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts
+* `--single_attention_vector, -sa`
                         merge attention weights in each position by averaging
-* `plot_model, -pl     plot model as png file`
-* `random_seed RANDOM_SEED, -rs RANDOM_SEED`
+* `--plot_model, -pl     plot model as png file`
+* `--random_seed RANDOM_SEED, -rs RANDOM_SEED`
                         random seed
 
 ## Prediction (predict.py)
@@ -122,20 +124,20 @@ usage: predict.py [-h] --data_dir DATA_DIR --model_file MODEL_FILE --cell_name
 Predict a model.
 
 optional arguments:
-  -h, --help            show this help message and exit
-* `data_dir DATA_DIR, -i DATA_DIR`
+* `-h, --help            show this help message and exit
+* `--data_dir DATA_DIR, -i DATA_DIR`
                         data_dir
-* `model_file MODEL_FILE, -m MODEL_FILE`
+* `--model_file MODEL_FILE, -m MODEL_FILE`
                         model_file
-* `cell_name CELL_NAME, -c CELL_NAME`
+* `--cell_name CELL_NAME, -c CELL_NAME`
                         cell_name
-* `predict_region_file PREDICT_REGION_FILE, -p PREDICT_REGION_FILE`
+* `--predict_region_file PREDICT_REGION_FILE, -p PREDICT_REGION_FILE`
                         predict_region_file
-* `output_predict_path OUTPUT_PREDICT_PATH, -o OUTPUT_PREDICT_PATH`
+* `--output_predict_path OUTPUT_PREDICT_PATH, -o OUTPUT_PREDICT_PATH`
                         output_predict_path
-* `batch_size BATCH_SIZE, -b BATCH_SIZE`
+* `--batch_size BATCH_SIZE, -b BATCH_SIZE`
                         batch_size
-* `blacklist_file BLACKLIST_FILE, -l BLACKLIST_FILE`
+* `--blacklist_file BLACKLIST_FILE, -l BLACKLIST_FILE`
                         blacklist_file to use, no fitering if not provided
 
 
