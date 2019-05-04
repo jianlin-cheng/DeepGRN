@@ -18,7 +18,7 @@ def get_lstm_output(fw_input,rc_input,num_lstm,lstm_units,rnn_dropout,cudnn):
         lstm_layer = CuDNNLSTM
     else:
         lstm_layer = LSTM
-    lstm_layers = []
+    lstm_layers = [Bidirectional(lstm_layer(lstm_units, return_sequences=True)),Dropout(rnn_dropout)]
     for i in range(num_lstm):
         lstm_layers.append(Bidirectional(lstm_layer(lstm_units, return_sequences=True)))
         lstm_layers.append(Dropout(rnn_dropout))
@@ -38,15 +38,17 @@ def attention_after_lstm_output(fw_input,rc_input,num_lstm,lstm_units,rnn_dropou
         prob_layers.append(a2)
         a3 = RepeatVector(lstm_units*2) #since we use Bidirectional
         prob_layers.append(a3)
-    alpha_probs_permute = Permute((2, 1), name='attention_vec')
-    prob_layers.append(alpha_probs_permute)
+#    alpha_probs_permute = Permute((2, 1), name='attention_vec')
+#    prob_layers.append(alpha_probs_permute)
     
-    fw_alpha = get_output(fw_lstm,prob_layers)
-    rc_alpha = get_output(rc_lstm,prob_layers)
+    fw_alpha1 = get_output(fw_lstm,prob_layers)
+    rc_alpha1 = get_output(rc_lstm,prob_layers)
     
-    multiply_layer = Multiply()
-    fw_output = multiply_layer([fw_lstm,fw_alpha])
-    rc_output = multiply_layer([rc_lstm,rc_alpha])
+    fw_alpha = Permute((2, 1), name='attention_vec_fw')(fw_alpha1)
+    rc_alpha = Permute((2, 1), name='attention_vec_rc')(rc_alpha1)
+    
+    fw_output = Multiply()([fw_lstm,fw_alpha])
+    rc_output = Multiply()([rc_lstm,rc_alpha])
     return fw_output,rc_output
 
 
@@ -67,9 +69,8 @@ def attention_before_lstm_output(fw_input,rc_input,num_lstm,lstm_units,rnn_dropo
     
     fw_alpha = get_output(fw_input,prob_layers)
     rc_alpha = get_output(rc_input,prob_layers)
-    multiply_layer = Multiply()
-    fw_output1 = multiply_layer([fw_input,fw_alpha])
-    rc_output1 = multiply_layer([rc_input,rc_alpha])
+    fw_output1 = Multiply()([fw_input,fw_alpha])
+    rc_output1 = Multiply()([rc_input,rc_alpha])
 
     fw_output,rc_output = get_lstm_output(fw_output1,rc_output1,num_lstm,lstm_units,rnn_dropout,cudnn)
     return fw_output,rc_output
@@ -104,7 +105,8 @@ def make_model_attention(model_type,L=None,n_channel=6, num_conv = 0,num_densela
                          num_dense=128, dropout_rate=0.1,rnn_dropout=0.1,num_meta=8,merge='ave',cudnn=False,single_attention_vector=False):
     forward_input = Input(shape=(L, n_channel,))
     reverse_input = Input(shape=(L, n_channel,))
-    layers_before_lstm = []
+    layers_before_lstm = [Convolution1D(input_shape=(L, n_channel), filters=num_filters,kernel_size=kernel_size,padding='valid', activation='relu',strides=1),
+                          Dropout(dropout_rate)]
     for i in range(num_conv):
         layers_before_lstm.append(Convolution1D(filters=num_filters,kernel_size=kernel_size, padding='valid', activation='relu',strides=1))
         layers_before_lstm.append(Dropout(dropout_rate))
@@ -118,36 +120,33 @@ def make_model_attention(model_type,L=None,n_channel=6, num_conv = 0,num_densela
     if model_type == 'lstm':
         fw_tensor_after_lstm,rc_tensor_after_lstm = get_lstm_output(fw_tensor_before_lstm,rc_tensor_before_lstm,num_lstm,num_recurrent,
                                                                     rnn_dropout,cudnn)
-        layers_lstm_to_meta = [Flatten(),Dense(num_dense, activation='relu')]
+        
+    elif model_type == 'lstm_attention1D':
+        fw_tensor_after_lstm1,rc_tensor_after_lstm1 = get_lstm_output(fw_tensor_before_lstm,rc_tensor_before_lstm,num_lstm,num_recurrent,
+                                                                    rnn_dropout,cudnn)
+        attention1D_layer = Attention1D(num_dense)
+        fw_tensor_after_lstm = attention1D_layer(fw_tensor_after_lstm1)
+        rc_tensor_after_lstm = attention1D_layer(rc_tensor_after_lstm1)
     elif model_type == 'attention_before_lstm':
         fw_tensor_after_lstm,rc_tensor_after_lstm = attention_before_lstm_output(fw_tensor_before_lstm,rc_tensor_before_lstm,num_lstm,
                                                                                 lstm_units=num_recurrent,time_steps=lstm_time_steps,
                                                                                 rnn_dropout = rnn_dropout,
                                                                                 single_attention_vector=single_attention_vector,cudnn=cudnn)
-        layers_lstm_to_meta = [Flatten(),Dense(num_dense, activation='relu')]
     elif model_type == 'attention_after_lstm':
         fw_tensor_after_lstm,rc_tensor_after_lstm = attention_after_lstm_output(fw_tensor_before_lstm,rc_tensor_before_lstm,num_lstm,
                                                                                 lstm_units=num_recurrent,time_steps=lstm_time_steps,
                                                                                 rnn_dropout = rnn_dropout,
-                                                                                single_attention_vector=single_attention_vector,cudnn=cudnn)         
-        layers_lstm_to_meta = [Flatten(),Dense(num_dense, activation='relu')]
-    elif model_type == 'attention1d_after_lstm':
-        attention1d_layer = Attention1D(output_dim = num_dense)
-        fw_tensor_after_lstm1,rc_tensor_after_lstm1 = get_lstm_output(fw_tensor_before_lstm,rc_tensor_before_lstm,num_lstm,num_recurrent,
-                                                                    rnn_dropout,cudnn)
-        fw_tensor_after_lstm = get_output(fw_tensor_after_lstm1,[attention1d_layer])
-        rc_tensor_after_lstm = get_output(rc_tensor_after_lstm1,[attention1d_layer])
-        layers_lstm_to_meta = [Dense(num_dense, activation='relu')]
+                                                                        single_attention_vector=single_attention_vector,cudnn=cudnn)        
     else:
         return 0
-    
+    layers_lstm_to_meta = [Flatten(),Dense(num_dense, activation='relu')]
     fw_tensor_before_meta = get_output(fw_tensor_after_lstm, layers_lstm_to_meta)
     rc_tensor_before_meta = get_output(rc_tensor_after_lstm, layers_lstm_to_meta)
+    
     if not num_meta==0:
         meta_input = Input(shape=(num_meta,))
-        meta_merge_layer = Concatenate()
-        fw_tensor_before_dense = meta_merge_layer([fw_tensor_before_meta, meta_input])
-        rc_tensor_before_dense = meta_merge_layer([rc_tensor_before_meta, meta_input])
+        fw_tensor_before_dense = Concatenate()([fw_tensor_before_meta, meta_input])
+        rc_tensor_before_dense = Concatenate()([rc_tensor_before_meta, meta_input])
         input_layers = [forward_input, reverse_input, meta_input]
     else:
         input_layers = [forward_input, reverse_input]
@@ -230,3 +229,24 @@ def make_model(model,L=None,n_channel=6, num_conv = 0,num_lstm = 0,num_denselaye
         output = Maximum()([forward_output, reverse_output])
     model = Model(inputs=input_layers, outputs=output)
     return model
+
+
+if __name__ == '__main__':
+    
+    m = make_model_attention('lstm',L=1002,num_meta=8,num_conv = 1,num_denselayer=0,num_lstm=1)
+    m1 = make_model_attention('attention_before_lstm',L=1002,num_meta=8,num_conv = 1,num_denselayer=0,num_lstm=1)
+    m2 = make_model_attention('attention_after_lstm',L=1002,num_meta=8,num_conv = 1,num_denselayer=0,num_lstm=1)
+    m3 = make_model_attention('attention_before_lstm',L=1002,num_meta=8,num_conv = 1,num_denselayer=0,num_lstm=1,single_attention_vector=True)
+    m4 = make_model_attention('attention_after_lstm',L=1002,num_meta=8,num_conv = 1,num_denselayer=0,num_lstm=1,single_attention_vector=True)
+        
+    
+    mo = make_model('lstm',L=1002,num_meta=8,num_conv = 1,num_denselayer=1,num_lstm=1)
+    from keras.utils import plot_model # require graphviz
+    plot_model(m,show_shapes=True,show_layer_names=True,to_file='model.png')
+    plot_model(mo,show_shapes=True,show_layer_names=True,to_file='model_original.png')
+    plot_model(m1,show_shapes=True,show_layer_names=True,to_file='attention_before_lstm.png')
+    plot_model(m2,show_shapes=True,show_layer_names=True,to_file='attention_after_lstm.png')
+    plot_model(m3,show_shapes=True,show_layer_names=True,to_file='attention_before_lstm_single_vec.png')
+    plot_model(m4,show_shapes=True,show_layer_names=True,to_file='attention_after_lstm_single_vec.png')
+
+

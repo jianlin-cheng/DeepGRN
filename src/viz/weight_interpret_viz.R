@@ -1,7 +1,7 @@
 library(pheatmap)
 library(ggplot2)
 library(reshape2)
-library(seqLogo)
+# library(seqLogo)
 data_path = '~/Dropbox/MU/workspace/encode_dream/data/figs_data/fig5left/CTCF.A549.chr10.276500.276700/'
 
 args <- commandArgs(T)
