@@ -124,7 +124,7 @@ usage: predict.py [-h] --data_dir DATA_DIR --model_file MODEL_FILE --cell_name
 Predict a model.
 
 optional arguments:
-* `-h, --help            show this help message and exit
+* `-h, --help`            show this help message and exit
 * `--data_dir DATA_DIR, -i DATA_DIR`
                         data_dir
 * `--model_file MODEL_FILE, -m MODEL_FILE`
