@@ -140,6 +140,7 @@ Predict a model.
 * `--blacklist_file BLACKLIST_FILE, -l BLACKLIST_FILE`
                         blacklist_file to use, no fitering if not provided
 
+## Generate demo data with single script:
 
 get_rawdata/get_data.sh provided a demo to generate all the required data for the Dream-Encode Challenge 2016
 
