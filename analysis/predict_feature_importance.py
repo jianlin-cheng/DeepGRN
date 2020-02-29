@@ -6,8 +6,10 @@ from keras.models import load_model
 from keras_pos_embd import PositionEmbedding, TrigPosEmbedding
 import tensorflow as tf
 
-import utils
 import get_model
+
+import utils_feature_importance
+
 
 def make_argument_parser():
 
@@ -19,9 +21,11 @@ def make_argument_parser():
     parser.add_argument('--predict_region_file', '-p', type=str, required=True,help='predict_region_file')
 
     parser.add_argument('--output_predict_path', '-o', type=str, required=True,help='output_predict_path')
-    parser.add_argument('--batch_size', '-b', type=int, required=False,help='batch_size',default=512)
+    parser.add_argument('--batch_size', '-b', type=int, required=False,help='batch_size',default=1000)
     parser.add_argument('--blacklist_file', '-l', type=str,required=False,
                         help='blacklist_file to use, no fitering if not provided',default='')
+    parser.add_argument('--feature_importance', '-f', type=str,required=False,
+                    help='feature_importance',default='')
     return parser
 
 def main():
@@ -35,7 +39,9 @@ def main():
     output_predict_path = args.output_predict_path
     batch_size = args.batch_size
     blacklist_file = args.blacklist_file
-
+    feature_importance = args.feature_importance
+    
+    model_name = re.sub(r'.+/(.+).h5','\\1',model_file)
     model = load_model(model_file,custom_objects={'Attention1D': get_model.Attention1D,
                                                   'PositionEmbedding':PositionEmbedding,
                                                   'TrigPosEmbedding':TrigPosEmbedding,
@@ -66,6 +72,7 @@ def main():
     window_size = predict_region[2][0] - predict_region[1][0]
     flanking = (model_inputs[0][1] - window_size) //2
     
+    print(output_predict_path,model_name,cell_name,unique35,rnaseq,gencode)
 
     genome_fasta_file = data_dir+'/hg19.genome.fa'
     DNase_path =data_dir+ '/DNase/'
@@ -74,7 +81,7 @@ def main():
     gencode_file = data_dir + '/gencode_feature_test.tsv'
         
     DNase_file = DNase_path+cell_name+'.1x.bw'
-    genome = utils.import_genome(genome_fasta_file,pred_chr)
+    genome = utils_feature_importance.import_genome(genome_fasta_file,pred_chr)
     
     rnaseq_pred = gencode_pred = 0
     if rnaseq:
@@ -83,10 +90,10 @@ def main():
         rnaseq_pred = rnaseq_data[pred_cell_list].values
     
     if gencode:
-        gencode_pred = pd.read_csv(gencode_file, sep='\t', header=None,dtype=utils.np.bool_).values  
+        gencode_pred = pd.read_csv(gencode_file, sep='\t', header=None,dtype=np.bool_).values  
     
     
-    datagen_pred = utils.PredictionGeneratorSingle(genome,bigwig_file_unique35,DNase_file,predict_region,rnaseq_pred,gencode_pred,unique35,rnaseq,gencode,flanking,batch_size)
+    datagen_pred = utils_feature_importance.PredictionGeneratorSingle(genome,bigwig_file_unique35,DNase_file,predict_region,rnaseq_pred,gencode_pred,unique35,rnaseq,gencode,flanking,batch_size,feature_importance=feature_importance)
     pred = model.predict_generator(datagen_pred,verbose=1)
     pred_final = pred.flatten()
     if blacklist_file != '':
@@ -101,6 +108,10 @@ if __name__ == '__main__':
     main()
 
 #For testing purposes
-# python train.py -i /home/chen/data/deepGRN/raw/ -t CTCF -ap resnetv1_lstm -o /home/chen/data/deepGRN/results/res_ctcf/ --plot_model --use_cudnn --unique35 -k 20 -nr 32 -dl 0
-# python predict.py -i /home/ccm3x/data/deepGRN/raw/ -m /home/ccm3x/data/deepGRN/results/res_ctcf/best_model.h5 -c PC-3 -p /home/chen/data/deepGRN/raw/label/predict_region.bed -o /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.tab.gz -l /home/ccm3x/data/deepGRN/raw/blacklist.bed.gz
-# python score.py /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.tab.gz /home/ccm3x/data/deepGRN/raw/label/final/ /home/chen/data/deepGRN/raw/label/predict_region.bed -o /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.txt
+#data_dir = '/home/chen/data/deepGRN/raw'
+#model_file = '/home/chen/Dropbox/MU/workspace/encode_dream/DeepGRN/data/models/attention_after_lstm.CTCF.1.401.unique35True.RNAseqTrue.GencodeTrue.h5'
+#batch_size = 32
+#cell_name = 'PC-3'
+#predict_region_file = '/home/chen/data/deepGRN/raw/label/predict_region.bed'
+#output_predict_path = '/home/chen/data/deepGRN/test/CTCF/factornet_attention.set1/F.CTCF.PC-3.tab.gz'
+#feature_importance = 'dnase'

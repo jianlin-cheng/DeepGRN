@@ -4,10 +4,9 @@ import pandas as pd
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from keras.optimizers import Adam
 from keras.models import load_model
-from utils import auc_roc,auc_prc
 from pathlib import Path
 import os
-import get_model, utils, res_model
+import get_model, utils
 
 def make_argument_parser():
 
@@ -53,7 +52,6 @@ def make_argument_parser():
     parser.add_argument('--val_negative_ratio', '-vn', type=int, required=False,help='val_negative_ratio',default=19)
 
     return parser
-
 
 def main():
     parser = make_argument_parser()
@@ -126,7 +124,6 @@ def main():
     genome = utils.import_genome(genome_fasta_file,all_chr)
     window_size = train_region.stop[0]-train_region.start[0]
     L = window_size+flanking*2
-    rnn_dropout = [rnn_dropout1,rnn_dropout2]
     num_meta = 0
     if rnaseq:
         num_meta = num_meta + 8
@@ -140,25 +137,12 @@ def main():
         n_channel=6
         if not unique35:
             n_channel = 5
-        if attention_position == 'resnetv1':
-            model = res_model.resnet_v1(input_shape = (L,n_channel),depth = 20,
-                                        kernel_size=kernel_size)
-        elif attention_position == 'resnetv1_lstm':
-            model = res_model.resnet_v1_lstm(input_shape = (L,n_channel), 
-                                             depth = 20,kernel_size=kernel_size,attention_position='attention_after_lstm',
-                                             num_dense = num_dense, num_recurrent = num_recurrent,num_lstm = num_lstm,
-                                             dropout_rate = dropout_rate,cudnn = use_cudnn,
-                                             single_attention_vector = single_attention_vector, rnn_dropout = rnn_dropout,
-                                             batch_norm = False,num_meta = num_meta, 
-                                             num_denselayer = num_denselayer,merge = merge)
-        else:
-            model = get_model.make_model(attention_position=attention_position,L=window_size+2*flanking,n_channel=n_channel, num_conv = num_conv,
+        model = get_model.make_model(attention_position=attention_position,L=L,n_channel=n_channel, num_conv = num_conv,
                              num_denselayer=num_denselayer,num_lstm=num_lstm,kernel_size=kernel_size,num_filters=num_filters, 
                              num_recurrent=num_recurrent,num_dense=num_dense,dropout_rate = dropout_rate,
                              rnn_dropout=[rnn_dropout1,rnn_dropout2],num_meta=num_meta,merge=merge,cudnn=use_cudnn,
                              single_attention_vector=single_attention_vector)
-    model.compile(Adam(lr=learningrate),loss='binary_crossentropy',metrics=['accuracy',auc_roc, auc_prc])
-    
+    model.compile(Adam(lr=learningrate),loss='binary_crossentropy',metrics=['accuracy'])
     
     rnaseq_train = rnaseq_val = 0
     if rnaseq:
@@ -202,9 +186,9 @@ def main():
                                                 cell_list,rnaseq_val,gencode_val,unique35,rnaseq,gencode,flanking,batch_size,
                                                 val_negative_ratio,double_strand)
     
-    checkpointer1 = ModelCheckpoint(filepath=output_model,verbose=1, save_best_only=False, monitor='auc_prc')
-    checkpointer2 = ModelCheckpoint(filepath=output_model_best,verbose=1, save_best_only=True, monitor='auc_prc')
-    earlystopper = EarlyStopping(monitor='auc_prc', patience=patience, verbose=1)
+    checkpointer1 = ModelCheckpoint(filepath=output_model,verbose=1, save_best_only=False, monitor='val_acc')
+    checkpointer2 = ModelCheckpoint(filepath=output_model_best,verbose=1, save_best_only=True, monitor='val_acc')
+    earlystopper = EarlyStopping(monitor='val_acc', patience=patience, verbose=1)
     csv_logger = CSVLogger(output_history,append=True)
     
 
@@ -216,5 +200,7 @@ if __name__ == '__main__':
     main()
 
 # python train.py -i /home/chen/data/deepGRN/raw/ -t CTCF -ap resnetv1_lstm -o /home/chen/data/deepGRN/results/res_ctcf/ --plot_model --use_cudnn --unique35 -k 20 -nr 32 -dl 0 --use_peak
-# python predict.py -i /home/chen/data/deepGRN/raw/ -m /home/chen/data/deepGRN/results/res_ctcf/best_model.h5 -c PC-3 -p /home/chen/data/deepGRN/raw/label/predict_region.bed -o /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.tab.gz -l /home/chen/data/deepGRN/raw/nonblacklist_bools.csv
-# python score.py /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.tab.gz /home/chen/data/deepGRN/raw/label/final/ /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.txt    
+# python predict.py -i /home/chen/data/deepGRN/raw/ -m /home/chen/data/deepGRN/results/res_ctcf/best_model.h5 -c PC-3 -p /home/chen/data/deepGRN/raw/label/predict_region.bed -o /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.tab.gz -l /home/chen/data/deepGRN/raw/blacklist.bed.gz
+# python score.py /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.tab.gz /home/chen/data/deepGRN/raw/label/final/ /home/chen/data/deepGRN/raw/label/predict_region.bed -o /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.txt
+    
+    

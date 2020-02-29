@@ -4,7 +4,6 @@ from keras.utils import Sequence
 
 import pyBigWig
 from pyfaidx import Fasta
-from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 
 #import itertools
 #from pybedtools import BedTool
@@ -306,10 +305,13 @@ class TrainGeneratorSingle(Sequence):
         y = np.concatenate((np.zeros(num_positive)+1,np.zeros(num_negative)))
         return X, y
 
+def shuffle_along_axis(a, axis):
+    idx = np.random.rand(*a.shape).argsort(axis=axis)
+    return np.take_along_axis(a,idx,axis=axis)
 
 class PredictionGeneratorSingle(Sequence):
     def __init__(self,genome,bw_dict_unique35,DNase_file,predict_region,rnaseq_data=0,gencode_data=0,unique35=True,
-                 rnaseq=False,gencode=False,flanking=0,batch_size=32,double_strand=True):
+                 rnaseq=False,gencode=False,flanking=0,batch_size=32,double_strand=True,feature_importance=''):
         self.batch_size = batch_size
         self.genome = genome
         self.unique35 = unique35
@@ -323,6 +325,7 @@ class PredictionGeneratorSingle(Sequence):
         self.bigwig_file_list = [DNase_file]
         self.start_idx = 0
         self.double_strand = double_strand
+        self.feature_importance = feature_importance
 
     def __len__(self):
         return int(np.ceil(self.predict_region.shape[0] / self.batch_size))
@@ -340,7 +343,19 @@ class PredictionGeneratorSingle(Sequence):
 
     def __data_generation(self,bins_batch):
         x_fw = make_x_batch(self.genome,self.bw_dict_unique35,self.bigwig_file_list,self.predict_region,bins_batch,self.flanking)
+                
+        if self.feature_importance == 'sequence':
+            # x_fw[:,:,0:4] = shuffle_along_axis(x_fw[:,:,0:4], 0)
+            x_fw[:,:,0:4] = np.zeros_like(x_fw[:,:,0:4])
+        elif self.feature_importance == 'unique35':
+           # x_fw[:,:,[4]] = shuffle_along_axis(x_fw[:,:,[4]], 0)
+            x_fw[:,:,[4]] = np.zeros_like(x_fw[:,:,[4]])
+        elif self.feature_importance == 'dnase':
+           # x_fw[:,:,[5]] = shuffle_along_axis(x_fw[:,:,[5]], 0)
+            x_fw[:,:,[5]] = np.zeros_like(x_fw[:,:,[5]])
+           
         x_rc = make_rc_x(x_fw)
+    
         if not self.unique35:
             x_fw = np.delete(x_fw,4,2)
             x_rc = np.delete(x_rc,4,2)
@@ -352,55 +367,27 @@ class PredictionGeneratorSingle(Sequence):
         if self.rnaseq and self.gencode:
             rnaseq_batch = np.transpose(self.rnaseq_data[:,bins_batch[2,:]])
             gencode_batch = self.gencode_data[bins_batch[0,:],:]+0
+            
+            if self.feature_importance == 'rnaseq':
+                
+                rnaseq_batch = shuffle_along_axis(rnaseq_batch,1)
+            elif self.feature_importance == 'gencode':
+                
+                gencode_batch = shuffle_along_axis(gencode_batch,1)
             X.append(np.concatenate((rnaseq_batch,gencode_batch),axis=1))
         elif self.rnaseq:
             rnaseq_batch = np.transpose(self.rnaseq_data[:,bins_batch[2,:]])
+            
+            if self.feature_importance == 'rnaseq':
+                
+                rnaseq_batch = shuffle_along_axis(rnaseq_batch,1)
             X.append(rnaseq_batch)
         elif self.gencode:
             gencode_batch = self.gencode_data[bins_batch[0,:],:]+0
+            if self.feature_importance == 'gencode':
+                
+                gencode_batch = shuffle_along_axis(gencode_batch,1)
             X.append(gencode_batch)  
-            
+
         return X
 
-
-def calc_metrics(y_true,y_score):
-    precision, recall, _ = precision_recall_curve(y_true, y_score)
-    auprc = auc(recall, precision)
-    auroc = roc_auc_score(y_true, y_score)
-    return auroc,auprc
-
-
-    
-def generate_dense_input(dense_input_dim,predict_region,rnaseq_data,gencode_data,
-                         chr_id,start,cell_name):
-
-    bin_idx = predict_region.loc[np.logical_and(predict_region[0] == chr_id, predict_region[1] == start)].index.tolist()[0]
-    
-    gencode_data = gencode_data[bin_idx,:]
-    gencode_data = gencode_data+0
-    
-    if dense_input_dim == 14:
-        x_dense = np.concatenate([rnaseq_data,gencode_data])
-    elif dense_input_dim == 8:
-        x_dense = rnaseq_data
-    elif dense_input_dim == 6:
-        x_dense = gencode_data  
-    else:
-        return None
-    
-    return x_dense
-
-def make_feature(genome,bigwig_file_unique35,DNase_file,chr_id,start,stop,
-                 flanking,seq_input_dim,predict_region,rnaseq_data,gencode_data,
-                 cell_name,dense_input_dim=0):
-    x_fw = make_x(genome,bigwig_file_unique35,DNase_file,start-flanking,stop+flanking,flanking,chr_id)
-    if seq_input_dim == 5: 
-        x_fw = np.delete(x_fw, 4, axis=1)
-    x_fw1 = np.array([x_fw])
-    x_rc1 = make_rc_x(x_fw1)
-    X = [x_fw1,x_rc1]
-    if dense_input_dim != 0:
-        x_dense = generate_dense_input(dense_input_dim,predict_region,rnaseq_data,gencode_data,chr_id,start,cell_name)
-        x_dense = np.reshape(x_dense,(1,x_dense.shape[0]))
-        X.append(x_dense)
-    return X

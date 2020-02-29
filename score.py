@@ -240,5 +240,5 @@ if __name__ == '__main__':
     
 #For testing purposes
 # python train.py -i /home/chen/data/deepGRN/raw/ -t CTCF -ap resnetv1_lstm -o /home/chen/data/deepGRN/results/res_ctcf/ --plot_model --use_cudnn --unique35 -k 20 -nr 32 -dl 0
-# python predict.py -i /home/ccm3x/data/deepGRN/raw/ -m /home/ccm3x/data/deepGRN/results/res_ctcf/best_model.h5 -c PC-3 -p /home/chen/data/deepGRN/raw/label/predict_region.bed -o /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.tab.gz -l /home/ccm3x/data/deepGRN/raw/nonblacklist_bools.csv
-# python score.py /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.tab.gz /home/chen/data/deepGRN/raw/label/final/ /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.txt
+# python predict.py -i /home/ccm3x/data/deepGRN/raw/ -m /home/ccm3x/data/deepGRN/results/res_ctcf/best_model.h5 -c PC-3 -p /home/chen/data/deepGRN/raw/label/predict_region.bed -o /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.tab.gz -l /home/ccm3x/data/deepGRN/raw/blacklist.bed.gz
+# python score.py /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.tab.gz /home/ccm3x/data/deepGRN/raw/label/final/ /home/chen/data/deepGRN/raw/label/predict_region.bed -o /home/chen/data/deepGRN/results/res_ctcf/F.CTCF.PC-3.txt
