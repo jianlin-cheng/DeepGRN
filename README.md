@@ -142,6 +142,8 @@ Predict a model.
 
 ## Prepare your input data for prediction:
 
+If you are interested in the DREAM-ENCODE Challenge 2016 data that we use in our experiment, we have prepared the [step by step guideline](data/README.md) to generate the input for training and prediction.
+
 ### Target region
 
 The region to predict should be a bed format file indicate the region you wish to predict along the chromosome. If you use our trained model, we recommend you consider use 200bp for each prediction since the models are trained using this format. Example:
@@ -350,10 +352,3 @@ Generate masks for genomic elements and blacklists, these can be user defined as
 cd $DATAPATH../src
 python get_mask_files.py
 ```
-
-
-
-
-
-
-
