@@ -174,12 +174,12 @@ Then you can run the bamCoverage in [deeptools](https://deeptools.readthedocs.io
 
 You can provide a BED or GTF file containing regions that should be excluded from bamCoverage analyses. For human, we use the [low mapability region provided by UCSC Genome Browser](http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeMapability/wgEncodeDacMapabilityConsensusExcludable.bed.gz)
 
-### Sequence uniqueness data[optional]
+### Sequence uniqueness data [optional]
 According to [UCSC Genome Browser](http://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg18&g=wgEncodeMapability). We use the Duke uniqueness score as an additional input. The Duke excluded regions track displays genomic regions for which mapped sequence tags were filtered out before signal generation and peak calling for Duke/UNC/UTA's Open Chromatin tracks. This track contains problematic regions for short sequence tag signal detection (such as satellites and rRNA genes). The Duke excluded regions track was generated for the ENCODE project.
 
 The Duke uniqueness score tracks display how unique is each sequence on the positive strand starting at a particular base and of a particular length. Thus, the 35 bp track reflects the uniqueness of all 35 base sequences with the score being assigned to the first base of the sequence. Scores are normalized to between 0 and 1 with 1 representing a completely unique sequence and 0 representing the sequence occurs >4 times in the genome (excluding chrN_random and alternative haplotypes). A score of 0.5 indicates the sequence occurs exactly twice, likewise 0.33 for three times and 0.25 for four times. For Human genome, you can use the [Duke uniqueness tracks](http://hgdownload.soe.ucsc.edu/goldenPath/hg18/encodeDCC/wgEncodeMapability/wgEncodeDukeUniqueness35bp.wig.gz)  generated for the ENCODE project as tools in the development of the Open Chromatin tracks. For other genomes, you can generate your own sequence uniqueness data following this rule and use [wigToBigWig](https://www.encodeproject.org/software/wigtobigwig/) to convert it to the BigWig format.
 
-### Gene expression profile[optional]
+### Gene expression profile [optional]
 Follwing the [FactorNet](https://www.sciencedirect.com/science/article/pii/S1046202318303293) framework, we use the first eight principal components from the RNA-Seq experiments for each cell type. These principal components should be generated using the TPM(Transcripts Per Kilobase Million) with replicates merged by averging. You should save this input in your/data/folder/rnaseq_data.csv as a Comma Separated Values file with the first line indicate the type of the cells.
 
 We provided a simple R script data/generate_pca.R to generate this data from TPM data. The input of this script should be a csv file containing a gene by cell type matrix with first row indicate the types of cell and the first column indicate the gene names. Usage:
