@@ -56,12 +56,12 @@ Train models for TF binding site prediction:
                         genome fasta file (required)
   * `--val_chr VAL_CHR, -v VAL_CHR`
                         name for validation chromosome (default: chr11)
-  * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -bf BIGWIG_FILE_UNIQUE35`
-                        35bp uniqueness file (default: '')
-  * `--rnaseq_data_file RNASEQ_DATA_FILE, -rf RNASEQ_DATA_FILE`
-                        RNA-Seq PCA data file (default: '')
-  * `--gencode_file GENCODE_FILE, -gc GENCODE_FILE`
-                        Genomic annotation file (default: '')
+  * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -u BIGWIG_FILE_UNIQUE35`
+                        35bp uniqueness file, will not use this feature if left empty (default: '')
+  * `--rnaseq_data_file RNASEQ_DATA_FILE, -r RNASEQ_DATA_FILE`
+                        RNA-Seq PCA data file, will not use this feature if left empty (default: '')
+  * `--gencode_file GENCODE_FILE, -g GENCODE_FILE`
+                        Genomic annotation file, will not use this feature if left empty (default: '')
   * `--attention_position ATTENTION_POSITION, -ap ATTENTION_POSITION`
                         Position of attention layers, can be attention_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm (default: 'attention_after_lstm')
   * `--flanking FLANKING, -f FLANKING`
@@ -98,9 +98,6 @@ Train models for TF binding site prediction:
                         Number of additional dense layers (default: 1)
   * `--ratio_negative RATIO_NEGATIVE, -rn RATIO_NEGATIVE`
                         Ratio of negative samples to positive samples in each epoch (default: 1)
-  * `--rnaseq, -r`          Use gene expression profile as an additional feature (default: OFF)
-  * `--gencode, -g`         Use genomic annotations as an additional feature (default: OFF)
-  * `--unique35, -u`        Use sequence uniqueness as an additional feature (default: OFF)
   * `--use_peak, -a`        should the positive bins sampled from peak regions? (default: OFF)
   * `--use_cudnn, -c`       use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts (default: OFF)
   * `--single_attention_vector, -sa`
@@ -145,7 +142,7 @@ To generate the figures that we use in our experiment, please refer to [these in
 
 ## Prepare your input data for prediction:
 
-The following sections are for users who wish to generate their own training/prediction dataset. If you are interested in the DREAM-ENCODE Challenge 2016 data that we use in our experiment, we have prepared the [step by step guideline](data/README.md) to generate the input for training and prediction.
+The following sections are for users who wish to generate their own training/prediction dataset. If you are interested in the DREAM-ENCODE Challenge 2016 data that we use in our experiment, we have prepared the [step by step guideline](example/README.md) to generate the input for training and prediction.
 
 ### Target region
 
@@ -192,7 +189,7 @@ We provided a simple R script data/generate_pca.R to generate this data from TPM
 `Rscript generate_pca.R [path/to/input.csv] [path/to/rnaseq_data.csv]`
 
 ### Genomic annotations [optional]
-The annotation feature for each bin is encoded as a binary vector of length 6, with each value representing if there is an overlap between the input bin and each of the six genomic features (coding regions, intron, promoter, 5'/3'-UTR, and CpG island). For Human genome Hg19, we use annotations from the [FactorNet GitHub repo](https://github.com/uci-cbcl/FactorNet/tree/master/resources) to generate the required input and save them in data/hg19. For preparing this input for your own genome, you can use our python script: data/generate_annotation.py Usage:
+The annotation feature for each bin is encoded as a binary vector of length 6, with each value representing if there is an overlap between the input bin and each of the six genomic features (coding regions, intron, promoter, 5'/3'-UTR, and CpG island). For Human genome Hg19, we use annotations from the [FactorNet GitHub repo](https://github.com/uci-cbcl/FactorNet/tree/master/resources) to generate the required input and save them in example/hg19. For preparing this input for your own genome, you can use our python script: data/generate_annotation.py Usage:
 
 `Python generate_annotation.py [gencode_path] [genome_sizes_file] [bed_file] [outfile]`
 
@@ -228,7 +225,7 @@ chrX	155270560
 
 `bed_file` is the file indicating the target region and should be the same as the one you use for the prediction script.
 
-
+(#Prepare)
 ## Prepare label data for custom training:
 
 In additional to the input files you need for prediction (the target region files are not required), you need to prepare the label information for training.
@@ -251,7 +248,7 @@ For each TF, you will need one such label file. You should save these (gzipped) 
 
 ### Narrowpeak files for data augmentation during training [optional]
 
-For TFs that have abundant binding sites, training performance and speed could benefit from sampling positive sample regions from the ChIP-Seq peak regions during each epoch. To do so, you would need to prepare a peak annotation file. We have provided the peak annotations as data/hg19/peak_annotation.gz for the TF and cells we used. For your own customized input, you can use data/generate_peaks.py to generate those peak annotations. Usage:
+For TFs that have abundant binding sites, training performance and speed could benefit from sampling positive sample regions from the ChIP-Seq peak regions during each epoch. To do so, you would need to prepare a peak annotation file. We have provided the peak annotations as example/hg19/peak_annotation.gz for the TF and cells we used. For your own customized input, you can use data/generate_peaks.py to generate those peak annotations. Usage:
 
 `Python generate_peaks.py [gencode_path] [genome_sizes_file] [bed_file] [outfile] [narrowPeak_path] [blacklist_file] [label_path] [label_peak_path] [genome_window_size] [flanking]`
 

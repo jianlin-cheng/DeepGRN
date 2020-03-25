@@ -18,9 +18,9 @@ def make_argument_parser():
     parser.add_argument('--genome_fasta_file', '-gf', type=str, required=True,help='genome fasta file')
     parser.add_argument('--val_chr', '-v', type=str, required=False,help='name for validation chromosome',default='chr11')
     
-    parser.add_argument('--bigwig_file_unique35', '-bf', type=str, required=False,help='35bp uniqueness file',default='')
-    parser.add_argument('--rnaseq_data_file', '-rf', type=str, required=False,help='RNA-Seq PCA data file',default='')
-    parser.add_argument('--gencode_file', '-gc', type=str, required=False,help='Genomic annotation file',default='')
+    parser.add_argument('--bigwig_file_unique35', '-r', type=str, required=False,help='35bp uniqueness file, will not use this feature if left empty',default='')
+    parser.add_argument('--rnaseq_data_file', '-r', type=str, required=False,help='RNA-Seq PCA data file, will not use this feature if left empty',default='')
+    parser.add_argument('--gencode_file', '-g', type=str, required=False,help='Genomic annotation file, will not use this feature if left empty',default='')
 
     parser.add_argument('--attention_position', '-ap', type=str, required=False,\
                         help='Position of attention layers, can be attention_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm',default='attention_after_lstm')
@@ -44,9 +44,10 @@ def make_argument_parser():
     parser.add_argument('--num_denselayer', '-dl', type=int, required=False,help='Number of additional dense layers',default=1)
     parser.add_argument('--ratio_negative', '-rn', type=int, required=False,help='Ratio of negative samples to positive samples in each epoch',default=1)
     
-    parser.add_argument('--rnaseq', '-r', action='store_true',help='Use gene expression profile as an additional feature')
-    parser.add_argument('--gencode', '-g', action='store_true',help='Use genomic annotations as an additional feature')
-    parser.add_argument('--unique35', '-u', action='store_true',help='Use sequence uniqueness as an additional feature')
+    # parser.add_argument('--rnaseq', '-r', action='store_true',help='Use gene expression profile as an additional feature')
+    # parser.add_argument('--gencode', '-g', action='store_true',help='Use genomic annotations as an additional feature')
+    # parser.add_argument('--unique35', '-u', action='store_true',help='Use sequence uniqueness as an additional feature')
+    
     parser.add_argument('--use_peak', '-a', action='store_true',help='should the positive bins sampled from peak regions?')
     parser.add_argument('--use_cudnn', '-c', action='store_true',help='use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts')
     parser.add_argument('--single_attention_vector', '-sa', action='store_true',help='merge attention weights in each position by averaging')
@@ -93,9 +94,9 @@ def main():
     num_denselayer = args.num_denselayer
     ratio_negative = args.ratio_negative
     
-    rnaseq = args.rnaseq
-    gencode = args.gencode
-    unique35 = args.unique35
+    rnaseq = rnaseq_data_file!=''
+    gencode = gencode_file!=''
+    unique35 = bigwig_file_unique35!=''
     positive_weight = args.positive_weight    
     
     use_peak = args.use_peak
