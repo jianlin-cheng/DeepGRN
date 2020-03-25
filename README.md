@@ -140,21 +140,9 @@ Use models trained from train.py for new data prediction:
 
 To generate the figures that we use in our experiment, please refer to [these instructions](analysis/README.md) to extract data from trained models and create the plot you are interested in.
 
-## Prepare your input data for prediction
+## Prepare input features for training and prediction
 
 The following sections are for users who wish to generate their own training/prediction dataset. If you are interested in the DREAM-ENCODE Challenge 2016 data that we use in our experiment, we have prepared the [step by step guideline](example/README.md) to generate the input for training and prediction.
-
-### Target region
-
-The region to predict should be a bed format file indicate the region you wish to predict along the chromosome. If you use our trained model, we recommend you consider use 200bp for each prediction since the models are trained using this format. Example:
-
-```
-chr1	600	800
-chr1	650	850
-chr1	700	900
-chr1	750	950
-chr1	800	1000
-```
 
 ### Genomic sequence
 
@@ -227,7 +215,7 @@ chrX	155270560
 
 ## Prepare label data for custom training
 
-In additional to the input files you need for prediction (the target region files are not required), you need to prepare the label information for training.
+In additional to the input feature information mentioned in [Prepare input features for training and prediction](#Prepare-input-features-for-training-and-prediction), you need to prepare the label information for training.
 
 ### label data
 
@@ -264,3 +252,15 @@ narrowPeak_path is the path you store the ChIP-Seq narrowPeak files. In our expe
 `genome_window_size` is the size of each bin in your label files. In our experiment we set it to 200.
 
 `flanking` is the length of upstream and downstream region that around your training sample. In our experiment we set it to 401.
+
+## Prepare target region for prediction
+
+In additional to the input feature information mentioned in [Prepare input features for training and prediction](#Prepare-input-features-for-training-and-prediction), you need to specify your target region for prediction. The region to predict should be a bed format file indicate the region you wish to predict along the chromosome. If you use our trained model, we recommend you consider use 200bp for each prediction since the models are trained using this format. Example:
+
+```
+chr1	600	800
+chr1	650	850
+chr1	700	900
+chr1	750	950
+chr1	800	1000
+```
