@@ -165,7 +165,7 @@ Chromatin accessibility data should be prepared as BigWig format from DNase-Seq 
 
 ```
 samtools merge {cell_type}.bam {cell_type}.rep1.bam {cell_type}.rep2.bam
-samtools index GM12878.bam
+samtools index {cell_type}.bam
 ```
 
 Then you can run the bamCoverage in [deeptools](https://deeptools.readthedocs.io/en/develop/content/tools/bamCoverage.html) to generate the required .bw file for each cell type. Here we use human genome as example:
