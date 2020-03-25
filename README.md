@@ -3,7 +3,7 @@ Deep learning for modeling gene regulatory network
 
 License
 -------
-© Contributors, 2019. Licensed under an [Apache-2] license.
+Â© Contributors, 2019. Licensed under an [Apache-2] license.
 
 Contribute
 ---------------------
