@@ -19,6 +19,10 @@ def make_argument_parser():
     parser.add_argument('--model_file', '-m', type=str, required=True,help='model_file')
     parser.add_argument('--cell_name', '-c', type=str, required=True,help='cell_name')
     parser.add_argument('--predict_region_file', '-p', type=str, required=True,help='predict_region_file')
+    
+    parser.add_argument('--bigwig_file_unique35', '-bf', type=str, required=False,help='35bp uniqueness file',default='')
+    parser.add_argument('--rnaseq_data_file', '-rf', type=str, required=False,help='RNA-Seq PCA data file',default='')
+    parser.add_argument('--gencode_file', '-gc', type=str, required=False,help='Genomic annotation file',default='')
 
     parser.add_argument('--output_predict_path', '-o', type=str, required=True,help='output_predict_path')
     parser.add_argument('--batch_size', '-b', type=int, required=False,help='batch_size',default=1000)
@@ -31,6 +35,10 @@ def make_argument_parser():
 def main():
     parser = make_argument_parser()
     args = parser.parse_args()
+    
+    bigwig_file_unique35 = args.bigwig_file_unique35
+    rnaseq_data_file = args.rnaseq_data_file
+    gencode_file = args.gencode_file
     
     data_dir = args.data_dir
     model_file = args.model_file
@@ -76,9 +84,6 @@ def main():
 
     genome_fasta_file = data_dir+'/hg19.genome.fa'
     DNase_path =data_dir+ '/DNase/'
-    bigwig_file_unique35 = data_dir + '/wgEncodeDukeMapabilityUniqueness35bp.bigWig'
-    rnaseq_data_file = data_dir + '/rnaseq_data.csv'
-    gencode_file = data_dir + '/gencode_feature_test.tsv'
         
     DNase_file = DNase_path+cell_name+'.1x.bw'
     genome = utils_feature_importance.import_genome(genome_fasta_file,pred_chr)
@@ -93,7 +98,9 @@ def main():
         gencode_pred = pd.read_csv(gencode_file, sep='\t', header=None,dtype=np.bool_).values  
     
     
-    datagen_pred = utils_feature_importance.PredictionGeneratorSingle(genome,bigwig_file_unique35,DNase_file,predict_region,rnaseq_pred,gencode_pred,unique35,rnaseq,gencode,flanking,batch_size,feature_importance=feature_importance)
+    datagen_pred = utils_feature_importance.PredictionGeneratorSingle(genome,bigwig_file_unique35,DNase_file,predict_region,
+                                                                      rnaseq_pred,gencode_pred,unique35,rnaseq,gencode,flanking,
+                                                                      batch_size,feature_importance=feature_importance)
     pred = model.predict_generator(datagen_pred,verbose=1)
     pred_final = pred.flatten()
     if blacklist_file != '':

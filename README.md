@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 # DeepGRN
 Deep learning for modeling gene regulatory network
 
@@ -63,61 +68,73 @@ usage: train.py [-h] --data_dir DATA_DIR --tf_name TF_NAME --output_dir
 
 ### Arguments
 
-* `-h, --help`            show this help message and exit
-* `--data_dir DATA_DIR, -i DATA_DIR`
-                        data_dir
-* `--tf_name TF_NAME, -t TF_NAME`
-                        tf_name
-* `--output_dir OUTPUT_DIR, -o OUTPUT_DIR`
-                        output_dir
-* `--attention_position ATTENTION_POSITION, -ap ATTENTION_POSITION`
+  * `-h, --help`            show this help message and exit
+  * `--data_dir DATA_DIR, -i DATA_DIR`
+                        path to the input data
+  * `--tf_name TF_NAME, -t TF_NAME`
+                        name of the transcription factor
+  * `--output_dir OUTPUT_DIR, -o OUTPUT_DIR`
+                        output path
+  * `--genome_fasta_file GENOME_FASTA_FILE, -gf GENOME_FASTA_FILE`
+                        genome fasta file
+  * `--val_chr VAL_CHR, -v VAL_CHR`
+                        name for validation chromosome
+  * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -bf BIGWIG_FILE_UNIQUE35`
+                        35bp uniqueness file
+  * `--rnaseq_data_file RNASEQ_DATA_FILE, -rf RNASEQ_DATA_FILE`
+                        RNA-Seq PCA data file
+  * `--gencode_file GENCODE_FILE, -gc GENCODE_FILE`
+                        Genomic annotation file
+  * `--attention_position ATTENTION_POSITION, -ap ATTENTION_POSITION`
                         Position of attention layers, can be attention1d_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm
-* `--flanking FLANKING, -f FLANKING`
-                        flanking
-* `--val_chr VAL_CHR, -v VAL_CHR`
-                        val_chr
-* `--epochs EPOCHS, -e EPOCHS`
+  * `--flanking FLANKING, -f FLANKING`
+                        flanking length
+  * `--epochs EPOCHS, -e EPOCHS`
                         epochs
-* `--patience PATIENCE, -p PATIENCE`
+  * `--patience PATIENCE, -p PATIENCE`
                         patience
-* `--batch_size BATCH_SIZE, -s BATCH_SIZE`
+  * `--batch_size BATCH_SIZE, -s BATCH_SIZE`
                         batch_size
-* `--learningrate LEARNINGRATE, -l LEARNINGRATE`
+  * `--learningrate LEARNINGRATE, -l LEARNINGRATE`
                         learningrate
-* `--kernel_size KERNEL_SIZE, -k KERNEL_SIZE`
+  * `--kernel_size KERNEL_SIZE, -k KERNEL_SIZE`
                         kernel_size for Conv1D
-* `--num_filters NUM_FILTERS, -nf NUM_FILTERS`
+  * `--num_filters NUM_FILTERS, -nf NUM_FILTERS`
                         num_filters for Conv1D
-* `--num_recurrent NUM_RECURRENT, -nr NUM_RECURRENT`
+  * `--num_recurrent NUM_RECURRENT, -nr NUM_RECURRENT`
                         Output dim for LSTM
-* `--num_dense NUM_DENSE, -nd NUM_DENSE`
+  * `--num_dense NUM_DENSE, -nd NUM_DENSE`
                         Output dim for dense layers
-* `--dropout_rate DROPOUT_RATE, -d DROPOUT_RATE`
+  * `--dropout_rate DROPOUT_RATE, -d DROPOUT_RATE`
                         dropout_rate for all layers except LSTM
-* `--rnn_dropout1 RNN_DROPOUT1, -rd1 RNN_DROPOUT1`
+  * `--rnn_dropout1 RNN_DROPOUT1, -rd1 RNN_DROPOUT1`
                         dropout_rate for LSTM
-* `--rnn_dropout2 RNN_DROPOUT2, -rd2 RNN_DROPOUT2`
+  * `--rnn_dropout2 RNN_DROPOUT2, -rd2 RNN_DROPOUT2`
                         rnn_dropout_rate for LSTM
-* `--merge MERGE, -me MERGE`
+  * `--merge MERGE, -me MERGE`
                         merge method, max or ave
-* `--num_conv NUM_CONV, -nc NUM_CONV`
+  * `--num_conv NUM_CONV, -nc NUM_CONV`
                         Number of Conv1D layers
-* `--num_lstm NUM_LSTM, -nl NUM_LSTM`
+  * `--num_lstm NUM_LSTM, -nl NUM_LSTM`
                         Number of LSTM layers
-* `--num_denselayer NUM_DENSELAYER, -dl NUM_DENSELAYER`
+  * `--num_denselayer NUM_DENSELAYER, -dl NUM_DENSELAYER`
                         Number of additional dense layers
-* `--ratio_negative RATIO_NEGATIVE, -rn RATIO_NEGATIVE`
+  * `--ratio_negative RATIO_NEGATIVE, -rn RATIO_NEGATIVE`
                         Ratio of negative samples to positive samples in each epoch
-* `--rnaseq, -r`          rnaseq
-* `--gencode, -g`         gencode
-* `--unique35, -u`        unique35
-* `--use_peak, -a`        use_peak
-* `--use_cudnn, -c`       use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts
-* `--single_attention_vector, -sa`
+  * `--rnaseq, -r`          Use gene expression profile as an additional feature
+  * `--gencode, -g`         Use genomic annotations as an additional feature
+  * `--unique35, -u`        Use sequence uniqueness as an additional feature
+  * `--use_peak, -a`        should the positive bins sampled from peak regions?
+  * `--use_cudnn, -c`       use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts
+  * `--single_attention_vector, -sa`
                         merge attention weights in each position by averaging
-* `--plot_model, -pl     plot model as png file`
-* `--random_seed RANDOM_SEED, -rs RANDOM_SEED`
+  * `--positive_weight POSITIVE_WEIGHT, -pw POSITIVE_WEIGHT`
+                        weight for positive samples
+  * `--plot_model, -pl`     if the model architecture should be plotted
+  * `--random_seed RANDOM_SEED, -rs RANDOM_SEED`
                         random seed
+  * `--val_negative_ratio VAL_NEGATIVE_RATIO, -vn VAL_NEGATIVE_RATIO`
+                        ratio for negative samples
 
 ## Prediction (predict.py)
 
@@ -127,31 +144,40 @@ Use models trained from train.py for new data prediction:
 ```
 usage: predict.py [-h] --data_dir DATA_DIR --model_file MODEL_FILE --cell_name
                   CELL_NAME --predict_region_file PREDICT_REGION_FILE
-                  --output_predict_path OUTPUT_PREDICT_PATH
-                  [--batch_size BATCH_SIZE] [--blacklist_file BLACKLIST_FILE]
+                  [--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35]
+                  [--rnaseq_data_file RNASEQ_DATA_FILE]
+                  [--gencode_file GENCODE_FILE] --output_predict_path
+                  OUTPUT_PREDICT_PATH [--batch_size BATCH_SIZE]
+                  [--blacklist_file BLACKLIST_FILE]
 ```
 
 Predict a model.
 
 ### Arguments
 
-* `-h, --help`            show this help message and exit
-* `--data_dir DATA_DIR, -i DATA_DIR`
-                        data_dir
-* `--model_file MODEL_FILE, -m MODEL_FILE`
-                        model_file
-* `--cell_name CELL_NAME, -c CELL_NAME`
-                        cell_name
-* `--predict_region_file PREDICT_REGION_FILE, -p PREDICT_REGION_FILE`
-                        predict_region_file
-* `--output_predict_path OUTPUT_PREDICT_PATH, -o OUTPUT_PREDICT_PATH`
-                        output_predict_path
-* `--batch_size BATCH_SIZE, -b BATCH_SIZE`
-                        batch_size
-* `--blacklist_file BLACKLIST_FILE, -l BLACKLIST_FILE`
+  * `-h, --help`            show this help message and exit
+  * `--data_dir DATA_DIR, -i DATA_DIR`
+                        path to the input data
+  * `--model_file MODEL_FILE, -m MODEL_FILE`
+                        path to model file
+  * `--cell_name CELL_NAME, -c CELL_NAME`
+                        cell name
+  * `--predict_region_file PREDICT_REGION_FILE, -p PREDICT_REGION_FILE`
+                        predict region file
+  * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -bf BIGWIG_FILE_UNIQUE35`
+                        35bp uniqueness file
+  * `--rnaseq_data_file RNASEQ_DATA_FILE, -rf RNASEQ_DATA_FILE`
+                        RNA-Seq PCA data file
+  * `--gencode_file GENCODE_FILE, -gc GENCODE_FILE`
+                        Genomic annotation file
+  * `--output_predict_path OUTPUT_PREDICT_PATH, -o OUTPUT_PREDICT_PATH`
+                        output path of prediction
+  * `--batch_size BATCH_SIZE, -b BATCH_SIZE`
+                        batch size
+  * `--blacklist_file BLACKLIST_FILE, -l BLACKLIST_FILE`
                         blacklist_file to use, no fitering if not provided
 
-To generate the figures that we use in our experiment, please refer to [this guideline](analysis/README.md) to extract data from trained models and create the plot you are interested in.
+To generate the figures that we use in our experiment, please refer to [these instructions](analysis/README.md) to extract data from trained models and create the plot you are interested in.
 
 ## Prepare your input data for prediction:
 
@@ -255,7 +281,6 @@ chr10   650     850     U       U       U       U       U       U       U
 chr10   700     900     U       U       U       U       U       U       U
 chr10   750     950     U       U       U       U       U       U       U
 chr10   800     1000    U       U       U       U       U       U       U
-
 ```
 
 For each TF, you will need one such label file. You should save these (gzipped) label files under data_dir/label/train/ and name them as [TF_name].train.labels.tsv.gz
@@ -279,91 +304,3 @@ label_peak_path is where the output annotation files are stored. They should be 
 genome_window_size is the size of each bin in your label files. In our experiment we set it to 200.
 
 flanking is the length of upstream and downstream region that around your training sample. For example, we use 401.
-
-## Generate demo data 
-
-### With a single script:
-
-get_rawdata/get_data.sh provided a demo to generate all the required data for the Dream-Encode Challenge 2016
-
-```
-bash get_rawdata/get_data.sh /home/yourname/data/inputs/
-```
-
-### Step by step:
-Assuming all feature data will be generated at $DATAPATH (e.g. /home/yourname/data/inputs/)
-
-Create directory structures
-
-```
-mkdir -p $DATAPATHbams
-mkdir -p $DATAPATHDNase
-mkdir -p $DATAPATHchipseq
-mkdir -p $DATAPATHgencode
-mkdir -p $DATAPATHlabel/train
-mkdir -p $DATAPATHlabel/leaderboard
-mkdir -p $DATAPATHlabel/final
-mkdir -p $DATAPATHlabel/train_positive
-mkdir -p $DATAPATHlabel/train_negative
-```
-
-
-Download annotation files for genomic elements
-
-```
-cd $DATAPATHgencode
-wget https://github.com/uci-cbcl/FactorNet/raw/master/resources/wgEncodeGencodeBasicV19.cds.merged.bed.gz
-wget https://github.com/uci-cbcl/FactorNet/raw/master/resources/wgEncodeGencodeBasicV19.intron.merged.bed.gz
-wget https://github.com/uci-cbcl/FactorNet/raw/master/resources/wgEncodeGencodeBasicV19.promoter.merged.bed.gz
-wget https://github.com/uci-cbcl/FactorNet/raw/master/resources/wgEncodeGencodeBasicV19.txStart.bed.gz
-wget https://github.com/uci-cbcl/FactorNet/raw/master/resources/wgEncodeGencodeBasicV19.utr3.merged.bed.gz
-wget https://github.com/uci-cbcl/FactorNet/raw/master/resources/wgEncodeGencodeBasicV19.utr5.merged.bed.gz
-```
-
-Get data from synapse(ChIP-Seq files, DNase files)
-
-```
-python get_syn_data.py $DATAPATH
-```
-
-Generate region file for prediction
-
-```
-cd $DATAPATHlabel/
-gzip -d *.gz
-awk '$1 == "chr1" {print}' test_regions.blacklistfiltered.bed > predict_region.bed
-awk '$1 == "chr21" {print}' test_regions.blacklistfiltered.bed >> predict_region.bed
-awk '$1 == "chr8" {print}' test_regions.blacklistfiltered.bed >> predict_region.bed
-```
-
-Download blacklist file, genome file, and uniqueness file from FactorNet repository since we also need to process the data by the way Factornet did.
-
-```
-cd $DATAPATH
-wget https://github.com/uci-cbcl/FactorNet/raw/master/resources/blacklist.bed.gz
-wget https://raw.githubusercontent.com/uci-cbcl/FactorNet/master/resources/hg19.autoX.chrom.sizes
-# get unique 35 data
-wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeMapability/wgEncodeDukeMapabilityUniqueness35bp.bigWig
-wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeMapability/wgEncodeDacMapabilityConsensusExcludable.bed.gz
-```
-
-Generate 2 missing bigwig files(A549 and IMR-90) from bams
-
-```
-cd $DATAPATHbams
-samtools merge A549.bam DNASE.A549.*
-samtools index A549.bam
-bamCoverage --bam A549.bam -o ../DNase/A549.1x.bw --outFileFormat bigwig --normalizeTo1x 2478297382 --ignoreForNormalization chrX chrM --Offset 1 --binSize 1 --numberOfProcessors 12 --skipNonCoveredRegions --blackListFileName ../wgEncodeDacMapabilityConsensusExcludable.bed.gz
-
-samtools merge IMR-90.bam DNASE.IMR90.*
-samtools index IMR-90.bam 
-bamCoverage --bam IMR-90.bam -o ../DNase/IMR-90.1x.bw --outFileFormat bigwig --normalizeTo1x 2478297382 --ignoreForNormalization chrX chrM --Offset 1 --binSize 1 --numberOfProcessors 12 --skipNonCoveredRegions --blackListFileName ../wgEncodeDacMapabilityConsensusExcludable.bed.gz
-```
-
-
-Generate masks for genomic elements and blacklists, these can be user defined as long as they are binary(0,1) vectors with the same length with the training/prediction bins. For genomic elements, 0 means not overlapping and 1 means overlapping for each bin. For blacklists zero means overlapping with black list. Those bins will not be trained and force to be 0 in prediction.
-
-```
-cd $DATAPATH../src
-python get_mask_files.py
-```

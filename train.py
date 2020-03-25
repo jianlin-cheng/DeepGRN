@@ -12,20 +12,19 @@ def make_argument_parser():
 
     parser = argparse.ArgumentParser(description="Train a model.",formatter_class=argparse.RawTextHelpFormatter)
     
-    parser.add_argument('--data_dir', '-i', type=str, required=True,help='data_dir')
-    parser.add_argument('--tf_name', '-t', type=str, required=True,help='tf_name')
-    parser.add_argument('--output_dir', '-o', type=str, required=True,help='output_dir')
+    parser.add_argument('--data_dir', '-i', type=str, required=True,help='path to the input data')
+    parser.add_argument('--tf_name', '-t', type=str, required=True,help='name of the transcription factor')
+    parser.add_argument('--output_dir', '-o', type=str, required=True,help='output path')
     parser.add_argument('--genome_fasta_file', '-gf', type=str, required=True,help='genome fasta file')
-    parser.add_argument('--val_chr', '-v', type=str, required=False,help='val_chr',default='chr11')
+    parser.add_argument('--val_chr', '-v', type=str, required=False,help='name for validation chromosome',default='chr11')
     
     parser.add_argument('--bigwig_file_unique35', '-bf', type=str, required=False,help='35bp uniqueness file',default='')
     parser.add_argument('--rnaseq_data_file', '-rf', type=str, required=False,help='RNA-Seq PCA data file',default='')
-    parser.add_argument('--gencode_train_file', '-gt', type=str, required=False,help='Genomic annotation file',default='')
+    parser.add_argument('--gencode_file', '-gc', type=str, required=False,help='Genomic annotation file',default='')
 
-    
     parser.add_argument('--attention_position', '-ap', type=str, required=False,\
                         help='Position of attention layers, can be attention1d_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm',default='attention_after_lstm')
-    parser.add_argument('--flanking', '-f', type=int, required=False,help='flanking',default=401)
+    parser.add_argument('--flanking', '-f', type=int, required=False,help='flanking length',default=401)
     
     parser.add_argument('--epochs', '-e', type=int, required=False,help='epochs',default=60)
     parser.add_argument('--patience', '-p', type=int, required=False,help='patience',default=5)
@@ -45,17 +44,17 @@ def make_argument_parser():
     parser.add_argument('--num_denselayer', '-dl', type=int, required=False,help='Number of additional dense layers',default=1)
     parser.add_argument('--ratio_negative', '-rn', type=int, required=False,help='Ratio of negative samples to positive samples in each epoch',default=1)
     
-    parser.add_argument('--rnaseq', '-r', action='store_true',help='rnaseq')
-    parser.add_argument('--gencode', '-g', action='store_true',help='gencode')
-    parser.add_argument('--unique35', '-u', action='store_true',help='unique35')
-    parser.add_argument('--use_peak', '-a', action='store_true',help='use_peak')
+    parser.add_argument('--rnaseq', '-r', action='store_true',help='Use gene expression profile as an additional feature')
+    parser.add_argument('--gencode', '-g', action='store_true',help='Use genomic annotations as an additional feature')
+    parser.add_argument('--unique35', '-u', action='store_true',help='Use sequence uniqueness as an additional feature')
+    parser.add_argument('--use_peak', '-a', action='store_true',help='should the positive bins sampled from peak regions?')
     parser.add_argument('--use_cudnn', '-c', action='store_true',help='use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts')
     parser.add_argument('--single_attention_vector', '-sa', action='store_true',help='merge attention weights in each position by averaging')
 
-    parser.add_argument('--positive_weight', '-pw', type=float, required=False,help='positive_weight',default=1.0)
-    parser.add_argument('--plot_model', '-pl', action='store_true',help='plot_model')
+    parser.add_argument('--positive_weight', '-pw', type=float, required=False,help='weight for positive samples',default=1.0)
+    parser.add_argument('--plot_model', '-pl', action='store_true',help='if the model architecture should be plotted')
     parser.add_argument('--random_seed', '-rs', type=int, required=False,help='random seed',default=0)
-    parser.add_argument('--val_negative_ratio', '-vn', type=int, required=False,help='val_negative_ratio',default=19)
+    parser.add_argument('--val_negative_ratio', '-vn', type=int, required=False,help='ratio for negative samples',default=19)
 
     return parser
 
@@ -66,11 +65,11 @@ def main():
     data_dir = args.data_dir
     tf_name = args.tf_name
     genome_fasta_file = args.genome_fasta_file
+    
     bigwig_file_unique35 = args.bigwig_file_unique35
     rnaseq_data_file = args.rnaseq_data_file
-    gencode_train_file = args.gencode_train_file
+    gencode_file = args.gencode_file
 
-    
     attention_position = args.attention_position
     flanking = args.flanking
     output_dir = args.output_dir
@@ -156,7 +155,7 @@ def main():
     if gencode:
         print('loading Gencode features')
         
-        gencode_train,gencode_val = utils.import_gencode(gencode_train_file,train_idx,val_idx)
+        gencode_train,gencode_val = utils.import_gencode(gencode_file,train_idx,val_idx)
     else:
         gencode_train = gencode_val = 0
     

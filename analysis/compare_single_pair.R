@@ -1,5 +1,6 @@
 d_single <- read.csv('~/Dropbox/MU/workspace/encode_dream/data/revision202001/deepgrn_single.csv',header = T,as.is = T)
 d_pair <- read.csv('~/Dropbox/MU/workspace/encode_dream/data/revision202001/deepgrn_pair.csv',header = T,as.is = T)
+
 # d_deepgrn = d_deepgrn[1:11,]
 par(mfrow=c(2,2))
 
