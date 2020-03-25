@@ -176,7 +176,7 @@ To generate the figures that we use in our experiment, please refer to [these in
 
 ## Prepare your input data for prediction:
 
-If you are interested in the DREAM-ENCODE Challenge 2016 data that we use in our experiment, we have prepared the [step by step guideline](data/README.md) to generate the input for training and prediction.
+The following sections are for users who wish to generate their own training/prediction dataset. If you are interested in the DREAM-ENCODE Challenge 2016 data that we use in our experiment, we have prepared the [step by step guideline](data/README.md) to generate the input for training and prediction.
 
 ### Target region
 
@@ -227,9 +227,9 @@ The annotation feature for each bin is encoded as a binary vector of length 6, w
 
 `Python generate_annotation.py [gencode_path] [genome_sizes_file] [bed_file] [outfile]`
 
-You should prepare your own (gzipped) bed files indicting the genomic features (coding regions, intron, promoter, 5'/3'-UTR, and CpG island) and save them as [cpgisland|cds|intron|promoter|utr5|utr3].bed.gz under the [gencode_path]. 
+You should prepare your own (gzipped) bed files indicting the genomic features (coding regions, intron, promoter, 5'/3'-UTR, and CpG island) and save them as [cpgisland|cds|intron|promoter|utr5|utr3].bed.gz under the `gencode_path`. 
 
-genome_sizes_file is the file containing size of each chromosome. For Hg19 the content is:
+`genome_sizes_file` is the file containing size of each chromosome. For Hg19 the content is:
 
 ```
 chr1	249250621
@@ -257,7 +257,7 @@ chr9	141213431
 chrX	155270560
 ```
 
-bed_file is the file indicating the target region and should be the same as the one you use for the prediction script.
+`bed_file` is the file indicating the target region and should be the same as the one you use for the prediction script.
 
 
 ## Prepare label data for custom training:
@@ -290,12 +290,12 @@ For TFs that have abundant binding sites, training performance and speed could b
 
 narrowPeak_path is the path you store the ChIP-Seq narrowPeak files. In our experiment, these peaks are the reproducible peaks across pseudo-replicates that pass the 10% IDR threshold. The peaks are provided in the [narrowPeak format](https://genome.ucsc.edu/FAQ/FAQformat.html#format12). For each cell type and TF pair, the file  should be named as  ChIPseq.[train_cell].[tf_name].conservative.train.narrowPeak.gz'
 
-blacklist_file is the file you want to exclude during analysis and can be empty if you do not wish to miss any regions
+`blacklist_file` is the file you want to exclude during analysis and can be empty if you do not wish to miss any regions
 
-label_path is where the label files are stored. They should be located in data_dir/label/train/
+`label_path` is where the label files are stored. They should be located in data_dir/label/train/
 
-label_peak_path is where the output annotation files are stored. They should be located in data_dir/label/train_positive/
+`label_peak_path` is where the output annotation files are stored. They should be located in data_dir/label/train_positive/
 
-genome_window_size is the size of each bin in your label files. In our experiment we set it to 200.
+`genome_window_size` is the size of each bin in your label files. In our experiment we set it to 200.
 
-flanking is the length of upstream and downstream region that around your training sample. For example, we use 401.
+`flanking` is the length of upstream and downstream region that around your training sample. For example, we use 401.

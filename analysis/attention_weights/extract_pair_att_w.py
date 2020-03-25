@@ -1,4 +1,4 @@
-import argparse
+import sys
 import numpy as np
 import pandas as pd
 from keras.models import load_model
@@ -13,13 +13,8 @@ import get_model
 
 dnase_ratio_cutoff = 25
 
-def make_argument_parser():
+tf_name = sys.argv[1]
 
-    parser = argparse.ArgumentParser(description="Predict a model.",formatter_class=argparse.RawTextHelpFormatter)
-    
-    parser.add_argument('--tf_name', '-t', type=str, required=True,help='tf_name')
-
-    return parser
 
 def make_predict_input(genome,bigwig_file_unique35,DNase_file,pred_region,
                        flanking,unique35):
@@ -43,10 +38,6 @@ def make_predict_input(genome,bigwig_file_unique35,DNase_file,pred_region,
 
 
 def main():
-    parser = make_argument_parser()
-    args = parser.parse_args()
-    
-    tf_name = args.tf_name
     
 #    tf_name = 'CTCF'
     model_type = 'pair'

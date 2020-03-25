@@ -14,22 +14,22 @@ import utils_feature_importance
 def make_argument_parser():
 
     parser = argparse.ArgumentParser(description="Predict a model.",formatter_class=argparse.RawTextHelpFormatter)
-    
-    parser.add_argument('--data_dir', '-i', type=str, required=True,help='data_dir')
-    parser.add_argument('--model_file', '-m', type=str, required=True,help='model_file')
-    parser.add_argument('--cell_name', '-c', type=str, required=True,help='cell_name')
-    parser.add_argument('--predict_region_file', '-p', type=str, required=True,help='predict_region_file')
+        
+    parser.add_argument('--data_dir', '-i', type=str, required=True,help='path to the input data')
+    parser.add_argument('--model_file', '-m', type=str, required=True,help='path to model file')
+    parser.add_argument('--cell_name', '-c', type=str, required=True,help='cell name')
+    parser.add_argument('--predict_region_file', '-p', type=str, required=True,help='predict region file')
     
     parser.add_argument('--bigwig_file_unique35', '-bf', type=str, required=False,help='35bp uniqueness file',default='')
     parser.add_argument('--rnaseq_data_file', '-rf', type=str, required=False,help='RNA-Seq PCA data file',default='')
     parser.add_argument('--gencode_file', '-gc', type=str, required=False,help='Genomic annotation file',default='')
 
-    parser.add_argument('--output_predict_path', '-o', type=str, required=True,help='output_predict_path')
-    parser.add_argument('--batch_size', '-b', type=int, required=False,help='batch_size',default=1000)
+    parser.add_argument('--output_predict_path', '-o', type=str, required=True,help='output path of prediction')
+    parser.add_argument('--batch_size', '-b', type=int, required=False,help='batch size',default=512)
     parser.add_argument('--blacklist_file', '-l', type=str,required=False,
                         help='blacklist_file to use, no fitering if not provided',default='')
     parser.add_argument('--feature_importance', '-f', type=str,required=False,
-                    help='feature_importance',default='')
+                    help='name of the feature you want to exclude',default='')
     return parser
 
 def main():
