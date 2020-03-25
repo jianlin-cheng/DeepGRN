@@ -140,7 +140,9 @@ Use models trained from train.py for new data prediction:
 
 To generate the figures that we use in our experiment, please refer to [these instructions](analysis/README.md) to extract data from trained models and create the plot you are interested in.
 
-## Prepare your input data for prediction:[ ](#Prepare)
+[Data Preparation](#Prepare-1)
+
+## Prepare your input data for prediction:
 
 The following sections are for users who wish to generate their own training/prediction dataset. If you are interested in the DREAM-ENCODE Challenge 2016 data that we use in our experiment, we have prepared the [step by step guideline](example/README.md) to generate the input for training and prediction.
 

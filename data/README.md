@@ -18,4 +18,4 @@ Suppose your data are stored at you/data/folder, it should have the following st
 
 You will also need to prepare a .bed format file specifying the region your target region if the task is prediction.
 
-For detailed instructions for data preparation, please refer to [Prepare label data for custom training](../README.md#Prepare)
+For detailed instructions for data preparation, please refer to [Prepare label data for custom training](../README.md#Prepare-1)
