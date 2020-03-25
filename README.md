@@ -43,9 +43,6 @@ tensorflow-gpu 1.11.0
 ## Training (train.py)
 Train models for TF binding site prediction:
 
-
-```
-
 ### Arguments
 
   * `-h, --help`            show this help message and exit
@@ -119,19 +116,6 @@ Train models for TF binding site prediction:
 ## Prediction (predict.py)
 
 Use models trained from train.py for new data prediction:
-
-
-```
-usage: predict.py [-h] --data_dir DATA_DIR --model_file MODEL_FILE --cell_name
-                  CELL_NAME --predict_region_file PREDICT_REGION_FILE
-                  [--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35]
-                  [--rnaseq_data_file RNASEQ_DATA_FILE]
-                  [--gencode_file GENCODE_FILE] --output_predict_path
-                  OUTPUT_PREDICT_PATH [--batch_size BATCH_SIZE]
-                  [--blacklist_file BLACKLIST_FILE]
-```
-
-Predict a model.
 
 ### Arguments
 
