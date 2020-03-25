@@ -225,7 +225,7 @@ chrX	155270560
 
 `bed_file` is the file indicating the target region and should be the same as the one you use for the prediction script.
 
-## Prepare label data for custom training:
+## Prepare label data for custom training
 
 In additional to the input files you need for prediction (the target region files are not required), you need to prepare the label information for training.
 
