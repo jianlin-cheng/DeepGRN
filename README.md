@@ -3,9 +3,9 @@ Deep learning for modeling gene regulatory network
 
 License
 -------
-© Contributors, 2019. Licensed under an [Apache-2] license.
+Â© Contributors, 2019. Licensed under an [Apache-2] license.
 
-Contribute to GNET2
+Contribute
 ---------------------
 DeepGRN has been developed and used by the Bioinformatics, Data Mining and Machine Learning Laboratory (BDM)
 . Help from every community member is very valuable to make the tool better for everyone.
