@@ -23,20 +23,20 @@ def make_argument_parser():
     parser.add_argument('--gencode_file', '-gc', type=str, required=False,help='Genomic annotation file',default='')
 
     parser.add_argument('--attention_position', '-ap', type=str, required=False,\
-                        help='Position of attention layers, can be attention1d_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm',default='attention_after_lstm')
+                        help='Position of attention layers, can be attention_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm',default='attention_after_lstm')
     parser.add_argument('--flanking', '-f', type=int, required=False,help='flanking length',default=401)
     
     parser.add_argument('--epochs', '-e', type=int, required=False,help='epochs',default=60)
     parser.add_argument('--patience', '-p', type=int, required=False,help='patience',default=5)
-    parser.add_argument('--batch_size', '-s', type=int, required=False,help='batch_size',default=64)
+    parser.add_argument('--batch_size', '-s', type=int, required=False,help='batch size',default=64)
     parser.add_argument('--learningrate', '-l', type=float, required=False,help='learningrate',default=0.001)
-    parser.add_argument('--kernel_size', '-k', type=int, required=False,help='kernel_size for Conv1D',default=34)
-    parser.add_argument('--num_filters', '-nf', type=int, required=False,help='num_filters for Conv1D',default=64)
+    parser.add_argument('--kernel_size', '-k', type=int, required=False,help='kernel size for Conv1D',default=34)
+    parser.add_argument('--num_filters', '-nf', type=int, required=False,help='number of filters for Conv1D',default=64)
     parser.add_argument('--num_recurrent', '-nr', type=int, required=False,help='Output dim for LSTM',default=32)
     parser.add_argument('--num_dense', '-nd', type=int, required=False,help='Output dim for dense layers',default=64)
     parser.add_argument('--dropout_rate', '-d', type=float, required=False,help='dropout_rate for all layers except LSTM',default=0.1)
-    parser.add_argument('--rnn_dropout1', '-rd1', type=float, required=False,help='dropout_rate for LSTM',default=0.5)
-    parser.add_argument('--rnn_dropout2', '-rd2', type=float, required=False,help='rnn_dropout_rate for LSTM',default=0.1)
+    parser.add_argument('--rnn_dropout1', '-rd1', type=float, required=False,help='dropout rate for LSTM',default=0.5)
+    parser.add_argument('--rnn_dropout2', '-rd2', type=float, required=False,help='rnn dropout rate for LSTM',default=0.1)
 
     parser.add_argument('--merge', '-me', type=str, required=False,help='merge method, max or ave',default='ave')
     parser.add_argument('--num_conv', '-nc', type=int, required=False,help='Number of Conv1D layers',default=1)
@@ -54,7 +54,7 @@ def make_argument_parser():
     parser.add_argument('--positive_weight', '-pw', type=float, required=False,help='weight for positive samples',default=1.0)
     parser.add_argument('--plot_model', '-pl', action='store_true',help='if the model architecture should be plotted')
     parser.add_argument('--random_seed', '-rs', type=int, required=False,help='random seed',default=0)
-    parser.add_argument('--val_negative_ratio', '-vn', type=int, required=False,help='ratio for negative samples',default=19)
+    parser.add_argument('--val_negative_ratio', '-vn', type=int, required=False,help='ratio for negative samples in validation',default=19)
 
     return parser
 

@@ -8,28 +8,25 @@ For the prediction of each target, we set the values of each sequential feature 
 
   * `-h, --help`            show this help message and exit
   * `--data_dir DATA_DIR, -i DATA_DIR`
-                        path to the input data
+                        path to the input data (required)
   * `--model_file MODEL_FILE, -m MODEL_FILE`
-                        path to model file
+                        path to model file (required)
   * `--cell_name CELL_NAME, -c CELL_NAME`
-                        cell name
+                        cell name (required)
   * `--predict_region_file PREDICT_REGION_FILE, -p PREDICT_REGION_FILE`
-                        predict region file
-  * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -bf BIGWIG_FILE_UNIQUE35`
-                        35bp uniqueness file
-  * `--rnaseq_data_file RNASEQ_DATA_FILE, -rf RNASEQ_DATA_FILE`
-                        RNA-Seq PCA data file
-  * `--gencode_file GENCODE_FILE, -gc GENCODE_FILE`
-                        Genomic annotation file
+                        predict region file (required)
   * `--output_predict_path OUTPUT_PREDICT_PATH, -o OUTPUT_PREDICT_PATH`
-                        output path of prediction
+                        output path of prediction (required)
+  * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -bf BIGWIG_FILE_UNIQUE35`
+                        35bp uniqueness file  (default '')
+  * `--rnaseq_data_file RNASEQ_DATA_FILE, -rf RNASEQ_DATA_FILE`
+                        RNA-Seq PCA data file  (default '')
+  * `--gencode_file GENCODE_FILE, -gc GENCODE_FILE`
+                        Genomic annotation file (default '')
   * `--batch_size BATCH_SIZE, -b BATCH_SIZE`
-                        batch size
+                        batch size  (default 512)
   * `--blacklist_file BLACKLIST_FILE, -l BLACKLIST_FILE`
-                        blacklist_file to use, no fitering if not provided
-  * `--feature_importance FEATURE_IMPORTANCE, -f FEATURE_IMPORTANCE`
-                        name of the feature you want to exclude
-
+                        blacklist_file to use, no fitering if not provided  (default '')
 
 ## Extracting attention weights and saliency scores from single and pairwise modules
 

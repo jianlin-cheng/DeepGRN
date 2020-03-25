@@ -5,7 +5,7 @@ License
 -------
 © Contributors, 2019. Licensed under an [Apache-2] license.
 
-Contribute to GNET2
+Contribute
 ---------------------
 DeepGRN has been developed and used by the Bioinformatics, Data Mining and Machine Learning Laboratory (BDM)
 . Help from every community member is very valuable to make the tool better for everyone.
@@ -45,91 +45,76 @@ Train models for TF binding site prediction:
 
 
 ```
-usage: train.py [-h] --data_dir DATA_DIR --tf_name TF_NAME --output_dir
-                OUTPUT_DIR [--attention_position ATTENTION_POSITION]
-                [--flanking FLANKING] [--val_chr VAL_CHR] [--epochs EPOCHS]
-                [--patience PATIENCE] [--batch_size BATCH_SIZE]
-                [--learningrate LEARNINGRATE] [--kernel_size KERNEL_SIZE]
-                [--num_filters NUM_FILTERS] [--num_recurrent NUM_RECURRENT]
-                [--num_dense NUM_DENSE] [--dropout_rate DROPOUT_RATE]
-                [--rnn_dropout1 RNN_DROPOUT1] [--rnn_dropout2 RNN_DROPOUT2]
-                [--merge MERGE] [--num_conv NUM_CONV] [--num_lstm NUM_LSTM]
-                [--num_denselayer NUM_DENSELAYER]
-                [--ratio_negative RATIO_NEGATIVE] [--rnaseq] [--gencode]
-                [--unique35] [--use_peak] [--use_cudnn]
-                [--single_attention_vector] [--plot_model]
-                [--random_seed RANDOM_SEED]
-```                
 
 ### Arguments
 
   * `-h, --help`            show this help message and exit
   * `--data_dir DATA_DIR, -i DATA_DIR`
-                        path to the input data
+                        path to the input data (required)
   * `--tf_name TF_NAME, -t TF_NAME`
-                        name of the transcription factor
+                        name of the transcription factor (required)
   * `--output_dir OUTPUT_DIR, -o OUTPUT_DIR`
-                        output path
+                        output path (required)
   * `--genome_fasta_file GENOME_FASTA_FILE, -gf GENOME_FASTA_FILE`
-                        genome fasta file
+                        genome fasta file (required)
   * `--val_chr VAL_CHR, -v VAL_CHR`
-                        name for validation chromosome
+                        name for validation chromosome (default chr11)
   * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -bf BIGWIG_FILE_UNIQUE35`
-                        35bp uniqueness file
+                        35bp uniqueness file (default '')
   * `--rnaseq_data_file RNASEQ_DATA_FILE, -rf RNASEQ_DATA_FILE`
-                        RNA-Seq PCA data file
+                        RNA-Seq PCA data file (default '')
   * `--gencode_file GENCODE_FILE, -gc GENCODE_FILE`
-                        Genomic annotation file
+                        Genomic annotation file (default '')
   * `--attention_position ATTENTION_POSITION, -ap ATTENTION_POSITION`
-                        Position of attention layers, can be attention1d_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm
+                        Position of attention layers, can be attention_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm (default 'attention_after_lstm')
   * `--flanking FLANKING, -f FLANKING`
-                        flanking length
+                        flanking length (default 401)
   * `--epochs EPOCHS, -e EPOCHS`
-                        epochs
+                        epochs (default 60)
   * `--patience PATIENCE, -p PATIENCE`
-                        patience
+                        training will stop early if no improvements after n epochs (default 5)
   * `--batch_size BATCH_SIZE, -s BATCH_SIZE`
-                        batch_size
+                        batch size (default 64)
   * `--learningrate LEARNINGRATE, -l LEARNINGRATE`
-                        learningrate
+                        learningrate (default 0.001)
   * `--kernel_size KERNEL_SIZE, -k KERNEL_SIZE`
-                        kernel_size for Conv1D
+                        kernel size for Conv1D (default 34)
   * `--num_filters NUM_FILTERS, -nf NUM_FILTERS`
-                        num_filters for Conv1D
+                        number of filters for Conv1D (default 64)
   * `--num_recurrent NUM_RECURRENT, -nr NUM_RECURRENT`
-                        Output dim for LSTM
+                        Output dim for LSTM (default 32)
   * `--num_dense NUM_DENSE, -nd NUM_DENSE`
-                        Output dim for dense layers
+                        Output dim for dense layers (default 64)
   * `--dropout_rate DROPOUT_RATE, -d DROPOUT_RATE`
-                        dropout_rate for all layers except LSTM
+                        dropout rate for all layers except LSTM (default 0.1)
   * `--rnn_dropout1 RNN_DROPOUT1, -rd1 RNN_DROPOUT1`
-                        dropout_rate for LSTM
+                        dropout rate for LSTM (default 0.1)
   * `--rnn_dropout2 RNN_DROPOUT2, -rd2 RNN_DROPOUT2`
-                        rnn_dropout_rate for LSTM
+                        RNN dropout rate for LSTM (default 0.1)
   * `--merge MERGE, -me MERGE`
-                        merge method, max or ave
+                        merge method, max or ave (default ave)
   * `--num_conv NUM_CONV, -nc NUM_CONV`
-                        Number of Conv1D layers
+                        Number of Conv1D layers (default 1)
   * `--num_lstm NUM_LSTM, -nl NUM_LSTM`
-                        Number of LSTM layers
+                        Number of LSTM layers (default 1)
   * `--num_denselayer NUM_DENSELAYER, -dl NUM_DENSELAYER`
-                        Number of additional dense layers
+                        Number of additional dense layers (default 1)
   * `--ratio_negative RATIO_NEGATIVE, -rn RATIO_NEGATIVE`
-                        Ratio of negative samples to positive samples in each epoch
-  * `--rnaseq, -r`          Use gene expression profile as an additional feature
-  * `--gencode, -g`         Use genomic annotations as an additional feature
-  * `--unique35, -u`        Use sequence uniqueness as an additional feature
-  * `--use_peak, -a`        should the positive bins sampled from peak regions?
-  * `--use_cudnn, -c`       use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts
+                        Ratio of negative samples to positive samples in each epoch (default 1)
+  * `--rnaseq, -r`          Use gene expression profile as an additional feature (default OFF)
+  * `--gencode, -g`         Use genomic annotations as an additional feature (default OFF)
+  * `--unique35, -u`        Use sequence uniqueness as an additional feature (default OFF)
+  * `--use_peak, -a`        should the positive bins sampled from peak regions? (default OFF)
+  * `--use_cudnn, -c`       use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts (default OFF)
   * `--single_attention_vector, -sa`
-                        merge attention weights in each position by averaging
+                        merge attention weights in each position by averaging (default OFF)
   * `--positive_weight POSITIVE_WEIGHT, -pw POSITIVE_WEIGHT`
-                        weight for positive samples
-  * `--plot_model, -pl`     if the model architecture should be plotted
+                        weight for positive samples (default 1)
+  * `--plot_model, -pl`     if the model architecture should be plotted (default OFF)
   * `--random_seed RANDOM_SEED, -rs RANDOM_SEED`
-                        random seed
+                        random seed (default 0)
   * `--val_negative_ratio VAL_NEGATIVE_RATIO, -vn VAL_NEGATIVE_RATIO`
-                        ratio for negative samples
+                        ratio for negative samples in validation (default 19)
 
 ## Prediction (predict.py)
 
@@ -152,25 +137,25 @@ Predict a model.
 
   * `-h, --help`            show this help message and exit
   * `--data_dir DATA_DIR, -i DATA_DIR`
-                        path to the input data
+                        path to the input data (required)
   * `--model_file MODEL_FILE, -m MODEL_FILE`
-                        path to model file
+                        path to model file (required)
   * `--cell_name CELL_NAME, -c CELL_NAME`
-                        cell name
+                        cell name (required)
   * `--predict_region_file PREDICT_REGION_FILE, -p PREDICT_REGION_FILE`
-                        predict region file
-  * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -bf BIGWIG_FILE_UNIQUE35`
-                        35bp uniqueness file
-  * `--rnaseq_data_file RNASEQ_DATA_FILE, -rf RNASEQ_DATA_FILE`
-                        RNA-Seq PCA data file
-  * `--gencode_file GENCODE_FILE, -gc GENCODE_FILE`
-                        Genomic annotation file
+                        predict region file (required)
   * `--output_predict_path OUTPUT_PREDICT_PATH, -o OUTPUT_PREDICT_PATH`
-                        output path of prediction
+                        output path of prediction (required)
+  * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -bf BIGWIG_FILE_UNIQUE35`
+                        35bp uniqueness file  (default '')
+  * `--rnaseq_data_file RNASEQ_DATA_FILE, -rf RNASEQ_DATA_FILE`
+                        RNA-Seq PCA data file  (default '')
+  * `--gencode_file GENCODE_FILE, -gc GENCODE_FILE`
+                        Genomic annotation file (default '')
   * `--batch_size BATCH_SIZE, -b BATCH_SIZE`
-                        batch size
+                        batch size  (default 512)
   * `--blacklist_file BLACKLIST_FILE, -l BLACKLIST_FILE`
-                        blacklist_file to use, no fitering if not provided
+                        blacklist_file to use, no fitering if not provided  (default '')
 
 To generate the figures that we use in our experiment, please refer to [these instructions](analysis/README.md) to extract data from trained models and create the plot you are interested in.
 
