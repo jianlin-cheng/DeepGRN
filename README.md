@@ -8,17 +8,18 @@ License
 Contribute to GNET2
 ---------------------
 DeepGRN has been developed and used by the Bioinformatics, Data Mining and Machine Learning Laboratory (BDM)
-. Help from every community member is very valuable to make the package better for everyone.
+. Help from every community member is very valuable to make the tool better for everyone.
 Checkout the [Lab Page](http://calla.rnet.missouri.edu/cheng/).
 
-## Required softwares:
+## Required software:
 
 ```
 Python 3.6.6
 bedtools 2.26.0
 ```
 
-Python modules:
+## Required Python modules:
+
 ```
 pandas 0.24.2
 numpy 1.16.2
@@ -150,6 +151,8 @@ Predict a model.
 * `--blacklist_file BLACKLIST_FILE, -l BLACKLIST_FILE`
                         blacklist_file to use, no fitering if not provided
 
+To generate the figures that we use in our experiment, please refer to [this guideline](analysis/README.md) to extract data from trained models and create the plot you are interested in.
+
 ## Prepare your input data for prediction:
 
 If you are interested in the DREAM-ENCODE Challenge 2016 data that we use in our experiment, we have prepared the [step by step guideline](data/README.md) to generate the input for training and prediction.
@@ -237,6 +240,8 @@ bed_file is the file indicating the target region and should be the same as the 
 
 
 ## Prepare label data for custom training:
+
+In additional to the input files you need for prediction (the target region files are not required), you need to prepare the label information for training.
 
 ### label data
 
