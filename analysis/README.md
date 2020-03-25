@@ -27,7 +27,8 @@ For the prediction of each target, we set the values of each sequential feature 
                         batch size  (default: 512)
   * `--blacklist_file BLACKLIST_FILE, -l BLACKLIST_FILE`
                         blacklist_file to use, no fitering if not provided  (default: '')
-
+  * `--feature_importance FEATURE_IMPORTANCE, -f FEATURE_IMPORTANCE`
+                        name of the feature you want to exclude during prediction  (default: '')
 ## Extracting attention weights and DNase scores and sequence nearby from single and pairwise modules
 
 extract_single1d_att_w.py, extract_single_att_w.py, extract_pair_att_w.py can be applied to corresponding attention model types
