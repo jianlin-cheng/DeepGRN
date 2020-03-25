@@ -15,11 +15,18 @@ def make_argument_parser():
     parser.add_argument('--data_dir', '-i', type=str, required=True,help='data_dir')
     parser.add_argument('--tf_name', '-t', type=str, required=True,help='tf_name')
     parser.add_argument('--output_dir', '-o', type=str, required=True,help='output_dir')
+    parser.add_argument('--genome_fasta_file', '-gf', type=str, required=True,help='genome fasta file')
+    parser.add_argument('--val_chr', '-v', type=str, required=False,help='val_chr',default='chr11')
+    
+    parser.add_argument('--bigwig_file_unique35', '-bf', type=str, required=False,help='35bp uniqueness file',default='')
+    parser.add_argument('--rnaseq_data_file', '-rf', type=str, required=False,help='RNA-Seq PCA data file',default='')
+    parser.add_argument('--gencode_train_file', '-gt', type=str, required=False,help='Genomic annotation file',default='')
 
+    
     parser.add_argument('--attention_position', '-ap', type=str, required=False,\
                         help='Position of attention layers, can be attention1d_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm',default='attention_after_lstm')
     parser.add_argument('--flanking', '-f', type=int, required=False,help='flanking',default=401)
-    parser.add_argument('--val_chr', '-v', type=str, required=False,help='val_chr',default='chr11')
+    
     parser.add_argument('--epochs', '-e', type=int, required=False,help='epochs',default=60)
     parser.add_argument('--patience', '-p', type=int, required=False,help='patience',default=5)
     parser.add_argument('--batch_size', '-s', type=int, required=False,help='batch_size',default=64)
@@ -44,7 +51,6 @@ def make_argument_parser():
     parser.add_argument('--use_peak', '-a', action='store_true',help='use_peak')
     parser.add_argument('--use_cudnn', '-c', action='store_true',help='use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts')
     parser.add_argument('--single_attention_vector', '-sa', action='store_true',help='merge attention weights in each position by averaging')
-#    parser.add_argument('--single_strand', '-ss', action='store_true',help='single_strand')
 
     parser.add_argument('--positive_weight', '-pw', type=float, required=False,help='positive_weight',default=1.0)
     parser.add_argument('--plot_model', '-pl', action='store_true',help='plot_model')
@@ -59,6 +65,12 @@ def main():
     
     data_dir = args.data_dir
     tf_name = args.tf_name
+    genome_fasta_file = args.genome_fasta_file
+    bigwig_file_unique35 = args.bigwig_file_unique35
+    rnaseq_data_file = args.rnaseq_data_file
+    gencode_train_file = args.gencode_train_file
+
+    
     attention_position = args.attention_position
     flanking = args.flanking
     output_dir = args.output_dir
@@ -95,24 +107,14 @@ def main():
     plot_model = args.plot_model
     if args.random_seed != 0:
         np.random.seed(args.random_seed)
-    
-#    print(tf_name,attention_position,flanking,rnaseq,gencode,unique35,output_dir)
-#    print(epochs,patience,batch_size,learningrate,kernel_size,num_filters,num_recurrent,num_dense,dropout_rate,merge)
-#    print(num_conv,num_lstm,num_denselayer,ratio_negative,use_peak,use_cudnn)
-    
-    genome_fasta_file = data_dir+'/hg19.genome.fa'
+        
     DNase_path =data_dir+ '/DNase'
-    bigwig_file_unique35 = data_dir + '/wgEncodeDukeMapabilityUniqueness35bp.bigWig'
-    rnaseq_data_file = data_dir + '/rnaseq_data.csv'
-    gencode_train_file = data_dir + '/gencode_feature_train.tsv'
-    
     train_label_path = data_dir + '/label/train/'
-    train_peaks_path = data_dir + '/label/train_positive/'
-    
-
-    
     label_data_file = train_label_path+tf_name+'.train.labels.tsv.gz'
+    
+    train_peaks_path = data_dir + '/label/train_positive/'
     positive_peak_file = train_peaks_path+tf_name+'.train.peak.tsv'
+    
     output_model_best = output_dir + '/best_model.h5'
     output_model = output_dir + attention_position + '.' + tf_name + '.{epoch:02d}.{val_acc:03f}.h5'
     output_history = output_dir + attention_position + '.' + tf_name + '.'+'1'+ '.'+str(flanking)+'.unique35'+str(unique35)+ '.RNAseq'+str(rnaseq)+ '.Gencode'+str(gencode)+'.csv'

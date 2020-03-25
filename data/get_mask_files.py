@@ -1,6 +1,5 @@
 import sys
 import re
-import itertools
 import numpy as np
 import pandas as pd
 from os import listdir
@@ -8,15 +7,16 @@ from os.path import isfile, join
 from pybedtools import BedTool, Interval
 
 data_path = sys.argv[1]
+
 #data_path = '/storage/htc/bdm/ccm3x/deepGRN/raw/'
 
-#label_path = data_path+'label/train'
-#label_peak_path = data_path+'label/train_positive/'
-#train_bed_file = data_path+'label/train_regions.blacklistfiltered.bed'
-#pred_bed_file = data_path+'label/predict_region.bed'
-#blacklist_file = data_path+'blacklist.bed.gz'
-#genome_sizes_file = data_path+'hg19.autoX.chrom.sizes'
-#gencode_path = data_path+'gencode/'
+label_path = data_path+'label/train'
+label_peak_path = data_path+'label/train_positive/'
+train_bed_file = data_path+'label/train_regions.blacklistfiltered.bed'
+pred_bed_file = data_path+'label/predict_region.bed'
+blacklist_file = data_path+'blacklist.bed.gz'
+genome_sizes_file = data_path+'hg19.autoX.chrom.sizes'
+gencode_path = data_path+'gencode/'
 
 L =1002
 genome_window_size = 200
@@ -37,7 +37,7 @@ def get_gencode_feature(bed_input,gencode_path):
     peaks_utr5_bedgraph = peaks.intersect(utr5_bed, wa=True, c=True)
     peaks_utr3_bedgraph = peaks.intersect(utr3_bed, wa=True, c=True)
     data = []    
-    for cpg, cds, intron, promoter, utr5, utr3 in itertools.izip(peaks_cpg_bedgraph,peaks_cds_bedgraph,peaks_intron_bedgraph,peaks_promoter_bedgraph,peaks_utr5_bedgraph,peaks_utr3_bedgraph):
+    for cpg, cds, intron, promoter, utr5, utr3 in zip(peaks_cpg_bedgraph,peaks_cds_bedgraph,peaks_intron_bedgraph,peaks_promoter_bedgraph,peaks_utr5_bedgraph,peaks_utr3_bedgraph):
         gencode = [cpg.count, cds.count, intron.count, promoter.count, utr5.count, utr3.count]
         data.append(gencode)
     return np.array(data, dtype=bool)
