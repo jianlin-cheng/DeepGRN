@@ -140,7 +140,7 @@ Use models trained from train.py for new data prediction:
 
 To generate the figures that we use in our experiment, please refer to [these instructions](analysis/README.md) to extract data from trained models and create the plot you are interested in.
 
-## Prepare your input data for prediction:
+## Prepare your input data for prediction:[](#Prepare)
 
 The following sections are for users who wish to generate their own training/prediction dataset. If you are interested in the DREAM-ENCODE Challenge 2016 data that we use in our experiment, we have prepared the [step by step guideline](example/README.md) to generate the input for training and prediction.
 
@@ -225,7 +225,6 @@ chrX	155270560
 
 `bed_file` is the file indicating the target region and should be the same as the one you use for the prediction script.
 
-(#Prepare)
 ## Prepare label data for custom training:
 
 In additional to the input files you need for prediction (the target region files are not required), you need to prepare the label information for training.

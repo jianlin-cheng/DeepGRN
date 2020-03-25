@@ -4,12 +4,12 @@ Suppose your data are stored at you/data/folder, it should have the following st
 
 ```bash
 |-- label (If the task is training)
-???   |-- train
-???   ???   |-- *.train.labels.tsv.gz
-???   |-- train_positive (if using positive bin sampling)
-???       |-- *.train.peak.tsv
+|   |-- train
+|   |   |-- *.train.labels.tsv.gz
+|   |-- train_positive (if using positive bin sampling)
+|       |-- *.train.peak.tsv
 |-- DNase
-???   |-- *.1x.bw
+|   |-- *.1x.bw
 |-- rnaseq_data.csv (if using rna-seq expression feature)
 |-- genomic_annotation.tsv (if using genomic annotations feature)
 |-- sequence_uniqueness.bw (if using sequence uniqueness feature)
