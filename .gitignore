@@ -3,6 +3,8 @@ performance
 plots
 .dropbox
 desktop.ini
+__pycache__
+
 # History files
 .Rhistory
 .Rapp.history

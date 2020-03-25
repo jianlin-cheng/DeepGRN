@@ -1,8 +1,3 @@
----
-output:
-  pdf_document: default
-  html_document: default
----
 # DeepGRN
 Deep learning for modeling gene regulatory network
 
