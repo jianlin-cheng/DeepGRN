@@ -172,7 +172,7 @@ Then you can run the bamCoverage in [deeptools](https://deeptools.readthedocs.io
 
 `bamCoverage --bam ${i}.bam -o ${i}.1x.bw --outFileFormat bigwig --normalizeTo1x 2478297382 --ignoreForNormalization chrX chrM --Offset 1 --binSize 1  --blackListFileName blacklist.bed.gz --skipNonCoveredRegions`
 
-You can provide a BED or GTF file containing regions that should be excluded from bamCoverage analyses. For human, we use the [low mapability region provided by UCSC Genome Browser](http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeMapability/wgEncodeDacMapabilityConsensusExcludable.bed.gz)
+You can provide a BED or GTF file containing regions that should be excluded from bamCoverage analyses with the `--blackListFileName` option. For human genome hg19, we use the [low mapability region provided by UCSC Genome Browser](http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeMapability/wgEncodeDacMapabilityConsensusExcludable.bed.gz) 
 
 ### Sequence uniqueness data [optional]
 According to [UCSC Genome Browser](http://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg18&g=wgEncodeMapability). We use the Duke uniqueness score as an additional input. The Duke excluded regions track displays genomic regions for which mapped sequence tags were filtered out before signal generation and peak calling for Duke/UNC/UTA's Open Chromatin tracks. This track contains problematic regions for short sequence tag signal detection (such as satellites and rRNA genes). The Duke excluded regions track was generated for the ENCODE project.
