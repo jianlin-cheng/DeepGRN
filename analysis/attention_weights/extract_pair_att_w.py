@@ -11,10 +11,18 @@ from scipy.interpolate import make_interp_spline, BSpline
 import utils
 import get_model
 
-dnase_ratio_cutoff = 25
+dnase_ratio_cutoff = 15
 
 tf_name = sys.argv[1]
+model_type = sys.argv[2]
+data_dir = sys.argv[3]
+model_file = sys.argv[4]
+label_file = sys.argv[5]
+pred_dir = sys.argv[6]
 
+out_fa_file = sys.argv[7]
+att_avg_out = sys.argv[8]
+dnase_out = sys.argv[9]
 
 def make_predict_input(genome,bigwig_file_unique35,DNase_file,pred_region,
                        flanking,unique35):
@@ -40,15 +48,15 @@ def make_predict_input(genome,bigwig_file_unique35,DNase_file,pred_region,
 def main():
     
 #    tf_name = 'CTCF'
-    model_type = 'pair'
+    # model_type = 'pair'
     
-    data_dir = '/home/chen/data/deepGRN/raw/'
-    model_file = '/home/chen/data/deepGRN/results/results_revision202001/best_'+model_type+'/best_models/'+tf_name+'_'+model_type+'.h5'
-    label_file = '/home/chen/data/deepGRN/raw/label/final/'+tf_name+'.train.labels.tsv.gz'
+    # data_dir = '/home/chen/data/deepGRN/raw/'
+    # model_file = '/home/chen/data/deepGRN/results/results_revision202001/best_'+model_type+'/best_models/'+tf_name+'_'+model_type+'.h5'
+    # label_file = '/home/chen/data/deepGRN/raw/label/final/'+tf_name+'.train.labels.tsv.gz'
     
-    out_fa_file = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/fa/'+tf_name+'_fw.fa'
-    att_avg_out = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/attention_score/'+tf_name+'_fw.csv'
-    dnase_out = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/dnase/'+tf_name+'_fw.csv'
+    # out_fa_file = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/fa/'+tf_name+'_fw.fa'
+    # att_avg_out = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/attention_score/'+tf_name+'_fw.csv'
+    # dnase_out = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/dnase/'+tf_name+'_fw.csv'
 
     
     model = load_model(model_file,custom_objects={'Attention1D': get_model.Attention1D,
@@ -66,15 +74,12 @@ def main():
     
     predict_region1 = predict_region.loc[contig_mask]
     
-    pred_file = '/home/chen/data/deepGRN/results/results_revision202001/best_single/best_pred/F.'+tf_name+'.'+cell_name+'.tab.gz'
+    pred_file = pred_dir+'/F.'+tf_name+'.'+cell_name+'.tab.gz'
     pred_data = pd.read_csv(pred_file, sep='\t',names=['chr','start','stop','val'])
     bind_labels = np.logical_and(predict_region1[cell_name]=='B', pred_data['val']>0.5)
     predict_region2 = predict_region1.loc[bind_labels,:]
-#    #########################################
-#    predict_region3 = predict_region2.iloc[15908,:]
-#    
+
     pred_chr = set(['chr1','chr8','chr21'])
-#    predict_region.index = range(predict_region.shape[0])
     
     if model_inputs[0][2] == 6:
         unique35 = True
@@ -115,11 +120,6 @@ def main():
     att_len = fw_avg_output.shape[1].value
     
     att_model_fw = get_model.Model(inputs=model.input[0:2],outputs=fw_avg_output)
-#    att_model_rc = get_model.Model(inputs=model.input[0:2],outputs=model.get_layer('attention_score').get_output_at(1))
-    
-#    pred_region = pd.DataFrame(columns=['chr_id', 'start_id', 'end_id'])
-#    for i in range(1):
-#         pred_region.loc[i] = [chr_id,start_id,end_id]
     
     print(predict_region2.shape[0]//10000 +1)
     outF = open(out_fa_file, "a")
@@ -161,36 +161,10 @@ def main():
             pred_fw_all = np.concatenate((pred_fw_all,pred_fw))
             dnase_fw_all = np.concatenate((dnase_fw_all,dnase_val1))
     outF.close()
-    
-#    att2d_fw = get_model.Model(inputs=model.input[0:2],outputs=model.get_layer('attention_score').get_output_at(0))
-#    pred2d_fw = att2d_fw.predict(datagen_pred1)
-#    ax = sns.heatmap(pred2d_fw[1500], cmap="YlGnBu")
-    
+
     np.savetxt(att_avg_out,pred_fw_all)
     np.savetxt(dnase_out,dnase_fw_all, fmt='%1.2f')
-#    print(pred_fw_all.shape)
-#    pred_rc = att_model_rc.predict(datagen_pred1)
-##    pred = model.predict(datagen_pred1)
-#    
-#    dnase_i = dnase_val1[0,:]
-#    att_i = pred_fw[0,:,:]
-#    np.fill_diagonal(att_i, 'nan')
-#    
-#    ax = sns.heatmap(att_i, cmap="YlGnBu")
-#    plt.plot(dnase_i)
-#    
-#    
-#    datagen_pred2 =[datagen_pred[0][dnase_ratio>63,:,:],datagen_pred[1][dnase_ratio>63,:,:]]
-#    dnase_val2 = dnase_val[dnase_ratio>63,:]
-#    
-#
-#    pred_fw2 = att_model_fw.predict(datagen_pred2)
-#    pred_rc2 = att_model_rc.predict(datagen_pred2)
-#    pred = model.predict(datagen_pred2)
-#    
-#    dnase_i = dnase_val2[100,:]
-#    ax = sns.heatmap(pred_fw2[100,:,:], cmap="YlGnBu")
-#    plt.plot(dnase_i)
+
     
     
 if __name__ == '__main__':

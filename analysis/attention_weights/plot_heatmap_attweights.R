@@ -1,7 +1,14 @@
-tf_name = 'CTCF'
-result_path = '/home/chen/data/deepGRN/results/results_revision202001/motif/'
-fimo_path = '/home/chen/meme/bin'
-model_type = 'single'
+# tf_name = 'CTCF'
+# result_path = '/home/chen/data/deepGRN/results/results_revision202001/motif/'
+# fimo_path = '/home/chen/meme/bin'
+# model_type = 'single'
+
+
+args <- commandArgs(T)
+tf_name = args[1]
+result_path = args[2]
+fimo_path = args[3]
+model_type = args[4]
 
 motif_file = paste0(result_path,'JASPAR/',tf_name,'.txt')
 seq_file = paste0(result_path,model_type,'/fa/',tf_name,'_fw.fa')
@@ -19,7 +26,7 @@ library(viridis)
 
 flanking = 10
 setwd(fimo_path)
-# system(paste0(fimo_path,'/fimo --thresh 1e-3 --o ',result_path,model_type,'/fimo_out/',tf_name,'/ ',motif_file, ' ',seq_file))
+system(paste0(fimo_path,'/fimo --thresh 1e-3 --o ',result_path,model_type,'/fimo_out/',tf_name,'/ ',motif_file, ' ',seq_file))
 
 attw <- read.csv(wfile,header = F,sep = ' ')
 gff_data <- read.delim(gff_file,as.is = T,comment.char = '#',header = F)

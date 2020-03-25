@@ -55,63 +55,63 @@ Train models for TF binding site prediction:
   * `--genome_fasta_file GENOME_FASTA_FILE, -gf GENOME_FASTA_FILE`
                         genome fasta file (required)
   * `--val_chr VAL_CHR, -v VAL_CHR`
-                        name for validation chromosome (default chr11)
+                        name for validation chromosome (default: chr11)
   * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -bf BIGWIG_FILE_UNIQUE35`
-                        35bp uniqueness file (default '')
+                        35bp uniqueness file (default: '')
   * `--rnaseq_data_file RNASEQ_DATA_FILE, -rf RNASEQ_DATA_FILE`
-                        RNA-Seq PCA data file (default '')
+                        RNA-Seq PCA data file (default: '')
   * `--gencode_file GENCODE_FILE, -gc GENCODE_FILE`
-                        Genomic annotation file (default '')
+                        Genomic annotation file (default: '')
   * `--attention_position ATTENTION_POSITION, -ap ATTENTION_POSITION`
-                        Position of attention layers, can be attention_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm (default 'attention_after_lstm')
+                        Position of attention layers, can be attention_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm (default: 'attention_after_lstm')
   * `--flanking FLANKING, -f FLANKING`
-                        flanking length (default 401)
+                        flanking length (default: 401)
   * `--epochs EPOCHS, -e EPOCHS`
-                        epochs (default 60)
+                        epochs (default: 60)
   * `--patience PATIENCE, -p PATIENCE`
-                        training will stop early if no improvements after n epochs (default 5)
+                        training will stop early if no improvements after n epochs (default: 5)
   * `--batch_size BATCH_SIZE, -s BATCH_SIZE`
-                        batch size (default 64)
+                        batch size (default: 64)
   * `--learningrate LEARNINGRATE, -l LEARNINGRATE`
-                        learningrate (default 0.001)
+                        learningrate (default: 0.001)
   * `--kernel_size KERNEL_SIZE, -k KERNEL_SIZE`
-                        kernel size for Conv1D (default 34)
+                        kernel size for Conv1D (default: 34)
   * `--num_filters NUM_FILTERS, -nf NUM_FILTERS`
-                        number of filters for Conv1D (default 64)
+                        number of filters for Conv1D (default: 64)
   * `--num_recurrent NUM_RECURRENT, -nr NUM_RECURRENT`
-                        Output dim for LSTM (default 32)
+                        Output dim for LSTM (default: 32)
   * `--num_dense NUM_DENSE, -nd NUM_DENSE`
-                        Output dim for dense layers (default 64)
+                        Output dim for dense layers (default: 64)
   * `--dropout_rate DROPOUT_RATE, -d DROPOUT_RATE`
-                        dropout rate for all layers except LSTM (default 0.1)
+                        dropout rate for all layers except LSTM (default: 0.1)
   * `--rnn_dropout1 RNN_DROPOUT1, -rd1 RNN_DROPOUT1`
-                        dropout rate for LSTM (default 0.1)
+                        dropout rate for LSTM (default: 0.1)
   * `--rnn_dropout2 RNN_DROPOUT2, -rd2 RNN_DROPOUT2`
-                        RNN dropout rate for LSTM (default 0.1)
+                        RNN dropout rate for LSTM (default: 0.1)
   * `--merge MERGE, -me MERGE`
-                        merge method, max or ave (default ave)
+                        merge method, max or ave (default: ave)
   * `--num_conv NUM_CONV, -nc NUM_CONV`
-                        Number of Conv1D layers (default 1)
+                        Number of Conv1D layers (default: 1)
   * `--num_lstm NUM_LSTM, -nl NUM_LSTM`
-                        Number of LSTM layers (default 1)
+                        Number of LSTM layers (default: 1)
   * `--num_denselayer NUM_DENSELAYER, -dl NUM_DENSELAYER`
-                        Number of additional dense layers (default 1)
+                        Number of additional dense layers (default: 1)
   * `--ratio_negative RATIO_NEGATIVE, -rn RATIO_NEGATIVE`
-                        Ratio of negative samples to positive samples in each epoch (default 1)
-  * `--rnaseq, -r`          Use gene expression profile as an additional feature (default OFF)
-  * `--gencode, -g`         Use genomic annotations as an additional feature (default OFF)
-  * `--unique35, -u`        Use sequence uniqueness as an additional feature (default OFF)
-  * `--use_peak, -a`        should the positive bins sampled from peak regions? (default OFF)
-  * `--use_cudnn, -c`       use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts (default OFF)
+                        Ratio of negative samples to positive samples in each epoch (default: 1)
+  * `--rnaseq, -r`          Use gene expression profile as an additional feature (default: OFF)
+  * `--gencode, -g`         Use genomic annotations as an additional feature (default: OFF)
+  * `--unique35, -u`        Use sequence uniqueness as an additional feature (default: OFF)
+  * `--use_peak, -a`        should the positive bins sampled from peak regions? (default: OFF)
+  * `--use_cudnn, -c`       use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts (default: OFF)
   * `--single_attention_vector, -sa`
-                        merge attention weights in each position by averaging (default OFF)
+                        merge attention weights in each position by averaging (default: OFF)
   * `--positive_weight POSITIVE_WEIGHT, -pw POSITIVE_WEIGHT`
-                        weight for positive samples (default 1)
-  * `--plot_model, -pl`     if the model architecture should be plotted (default OFF)
+                        weight for positive samples (default: 1)
+  * `--plot_model, -pl`     if the model architecture should be plotted (default: OFF)
   * `--random_seed RANDOM_SEED, -rs RANDOM_SEED`
-                        random seed (default 0)
+                        random seed (default: 0)
   * `--val_negative_ratio VAL_NEGATIVE_RATIO, -vn VAL_NEGATIVE_RATIO`
-                        ratio for negative samples in validation (default 19)
+                        ratio for negative samples in validation (default: 19)
 
 ## Prediction (predict.py)
 
@@ -131,15 +131,15 @@ Use models trained from train.py for new data prediction:
   * `--output_predict_path OUTPUT_PREDICT_PATH, -o OUTPUT_PREDICT_PATH`
                         output path of prediction (required)
   * `--bigwig_file_unique35 BIGWIG_FILE_UNIQUE35, -bf BIGWIG_FILE_UNIQUE35`
-                        35bp uniqueness file  (default '')
+                        35bp uniqueness file  (default: '')
   * `--rnaseq_data_file RNASEQ_DATA_FILE, -rf RNASEQ_DATA_FILE`
-                        RNA-Seq PCA data file  (default '')
+                        RNA-Seq PCA data file  (default: '')
   * `--gencode_file GENCODE_FILE, -gc GENCODE_FILE`
-                        Genomic annotation file (default '')
+                        Genomic annotation file (default: '')
   * `--batch_size BATCH_SIZE, -b BATCH_SIZE`
-                        batch size  (default 512)
+                        batch size  (default: 512)
   * `--blacklist_file BLACKLIST_FILE, -l BLACKLIST_FILE`
-                        blacklist_file to use, no fitering if not provided  (default '')
+                        blacklist_file to use, no fitering if not provided  (default: '')
 
 To generate the figures that we use in our experiment, please refer to [these instructions](analysis/README.md) to extract data from trained models and create the plot you are interested in.
 
@@ -267,4 +267,4 @@ narrowPeak_path is the path you store the ChIP-Seq narrowPeak files. In our expe
 
 `genome_window_size` is the size of each bin in your label files. In our experiment we set it to 200.
 
-`flanking` is the length of upstream and downstream region that around your training sample. For example, we use 401.
+`flanking` is the length of upstream and downstream region that around your training sample. In our experiment we set it to 401.

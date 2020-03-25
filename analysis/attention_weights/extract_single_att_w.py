@@ -1,4 +1,4 @@
-import argparse
+import sys
 import numpy as np
 import pandas as pd
 from keras.models import load_model
@@ -13,13 +13,17 @@ import get_model
 
 dnase_ratio_cutoff = 15
 
-def make_argument_parser():
+tf_name = sys.argv[1]
+model_type = sys.argv[2]
+data_dir = sys.argv[3]
+model_file = sys.argv[4]
+label_file = sys.argv[5]
+pred_dir = sys.argv[6]
 
-    parser = argparse.ArgumentParser(description="Predict a model.",formatter_class=argparse.RawTextHelpFormatter)
-    
-    parser.add_argument('--tf_name', '-t', type=str, required=True,help='tf_name')
+out_fa_file = sys.argv[7]
+att_avg_out = sys.argv[8]
+dnase_out = sys.argv[9]
 
-    return parser
 
 def make_predict_input(genome,bigwig_file_unique35,DNase_file,pred_region,
                        flanking,unique35):
@@ -43,21 +47,14 @@ def make_predict_input(genome,bigwig_file_unique35,DNase_file,pred_region,
 
 
 def main():
-    parser = make_argument_parser()
-    args = parser.parse_args()
     
-    tf_name = args.tf_name
+    # data_dir = '/home/chen/data/deepGRN/raw/'
+    # model_file = '/home/chen/data/deepGRN/results/results_revision202001/best_'+model_type+'/best_models/'+tf_name+'_'+model_type+'.h5'
+    # label_file = '/home/chen/data/deepGRN/raw/label/final/'+tf_name+'.train.labels.tsv.gz'
     
-#    tf_name = 'CTCF'
-    model_type = 'single'
-    
-    data_dir = '/home/chen/data/deepGRN/raw/'
-    model_file = '/home/chen/data/deepGRN/results/results_revision202001/best_'+model_type+'/best_models/'+tf_name+'_'+model_type+'.h5'
-    label_file = '/home/chen/data/deepGRN/raw/label/final/'+tf_name+'.train.labels.tsv.gz'
-    
-    out_fa_file = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/fa/'+tf_name+'_fw.fa'
-    att_avg_out = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/attention_score/'+tf_name+'_fw.csv'
-    dnase_out = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/dnase/'+tf_name+'_fw.csv'
+    # out_fa_file = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/fa/'+tf_name+'_fw.fa'
+    # att_avg_out = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/attention_score/'+tf_name+'_fw.csv'
+    # dnase_out = '/home/chen/data/deepGRN/results/results_revision202001/motif/'+model_type+'/dnase/'+tf_name+'_fw.csv'
 
     
     model = load_model(model_file,custom_objects={'Attention1D': get_model.Attention1D,
@@ -75,7 +72,7 @@ def main():
     
     predict_region1 = predict_region.loc[contig_mask]
     
-    pred_file = '/home/chen/data/deepGRN/results/results_revision202001/best_single/best_pred/F.'+tf_name+'.'+cell_name+'.tab.gz'
+    pred_file = pred_dir+'/F.'+tf_name+'.'+cell_name+'.tab.gz'
     pred_data = pd.read_csv(pred_file, sep='\t',names=['chr','start','stop','val'])
     bind_labels = np.logical_and(predict_region1[cell_name]=='B', pred_data['val']>0.5)
     predict_region2 = predict_region1.loc[bind_labels,:]
