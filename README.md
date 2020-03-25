@@ -263,7 +263,9 @@ genome_window_size is the size of each bin in your label files. In our experimen
 
 flanking is the length of upstream and downstream region that around your training sample. For example, we use 401.
 
-## Generate demo data with single script:
+## Generate demo data 
+
+### With a single script:
 
 get_rawdata/get_data.sh provided a demo to generate all the required data for the Dream-Encode Challenge 2016
 
@@ -271,7 +273,7 @@ get_rawdata/get_data.sh provided a demo to generate all the required data for th
 bash get_rawdata/get_data.sh /home/yourname/data/inputs/
 ```
 
-## Generate step by step:
+### Step by step:
 Assuming all feature data will be generated at $DATAPATH (e.g. /home/yourname/data/inputs/)
 
 Create directory structures
