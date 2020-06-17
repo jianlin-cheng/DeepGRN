@@ -29,7 +29,7 @@ def make_argument_parser():
     parser.add_argument('--blacklist_file', '-l', type=str,required=False,
                         help='blacklist_file to use, no fitering if not provided',default='')
     parser.add_argument('--feature_importance', '-f', type=str,required=False,
-                    help='name of the feature you want to exclude',default='')
+                    help='name of the feature you want to exclude during prediction',default='')
     return parser
 
 def main():
