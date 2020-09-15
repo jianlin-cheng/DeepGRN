@@ -341,7 +341,7 @@ def make_model(attention_position='attention1d_after_lstm',L=None,n_channel=6,
         fw_tensor_after_lstm,rc_tensor_after_lstm = get_qkv_att_before_lstm(fw_tensor_before_lstm,rc_tensor_before_lstm,num_lstm,
                                                                              lstm_units=num_recurrent,time_steps=lstm_time_steps,
                                                                              rnn_dropout = dropout_rate,
-                                                                             single_attention_vector=single_attention_vector,cudnn=cudnn,use_embedding='PositionEmbedding.MODE_ADD')
+                                                                             single_attention_vector=single_attention_vector,cudnn=cudnn,use_embedding='TrigPosEmbedding.MODE_ADD')
         layers_lstm_to_meta = [Flatten(),Dense(num_dense, activation='relu')]        
     else:
         return 0
@@ -658,22 +658,13 @@ def make_model_extract_att(attention_position='attention1d_after_lstm',L=None,n_
     return model
 
 if __name__ == '__main__':
-    n_channel=5
-    L=1002
-    num_meta=0
-    X_fw = np.random.random((16,L,n_channel))
-    X_rc = np.random.random((16,L,n_channel))
-    X_dense = np.random.random((1,L,num_meta))
-    
-    m =  make_model('qkv_pe_before_lstm',L=L,num_meta=num_meta,kernel_size=15,n_channel=n_channel,num_dense=64,
-                             num_filters=64,num_conv = 1,num_denselayer=1,num_lstm=1)
+    m = make_model(attention_position='qkv_pe',L=1002,n_channel=6, num_conv = 2,
+                             num_denselayer=0,num_lstm=2,kernel_size=20,num_filters=64, 
+                             num_recurrent=64,num_dense=64,dropout_rate = 0.1,
+                             rnn_dropout=[0.5,0.1],num_meta=14,merge='ave',cudnn=True,
+                             single_attention_vector=False)
     print(m.summary())
-    if num_meta ==0:
-        X = [X_fw,X_rc]
-    else:
-        X = [X_fw,X_rc,X_dense]
-    pred_test = m.predict(X)
-    print(pred_test.shape)
+
     
 #    from keras.utils import plot_model # require graphviz
 #    plot_model(m,show_shapes=True,show_layer_names=False,to_file='model.png')

@@ -65,4 +65,4 @@ bamCoverage --bam IMR-90.bam -o ../DNase/IMR-90.1x.bw --outFileFormat bigwig --n
 #generating labels and non_blacklist_bools.csv
 
 cd $DATAPATH../src
-python get_mask_files.py
+python get_mask_files.py DATAPATH

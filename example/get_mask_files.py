@@ -92,17 +92,18 @@ np.savetxt(data_path+'gencode_feature_test.tsv',gencode_feature_test, fmt='%1.0f
 
 tf_files = [f for f in listdir(label_path) if isfile(join(label_path, f))]
 for tf_file in tf_files:
+    print(tf_file)
     tf_name = re.sub("(\..+)$", "", tf_file)
-    label_train = pd.read_csv(data_path+'label/train/'+tf_name+'.train.labels.tsv',sep='\t',nrows=3)
+    label_train = pd.read_csv(data_path+'label/train/'+tf_name+'.train.labels.tsv.gz',sep='\t',nrows=3)
     train_cells = list(label_train.columns.values)[3:label_train.shape[1]]
     pos_labels = pd.DataFrame(None)
     cell_idx = 0
     for train_cell in train_cells:
-        relax_bed = BedTool(data_path+'chipseq/ChIPseq.'+train_cell+'.'+tf_name+'.relaxed.narrowPeak.gz')
-        relax_bed = relax_bed.sort()
-        relax_bed_slop = relax_bed.slop(g=genome_sizes_file, b=genome_window_size)
-        nonnegative_bed = blacklist_bed.cat(relax_bed_slop)
-        nonnegative_bed = nonnegative_bed.sort()
+        # relax_bed = BedTool(data_path+'chipseq/ChIPseq.'+train_cell+'.'+tf_name+'.relaxed.narrowPeak.gz')
+        # relax_bed = relax_bed.sort()
+        # relax_bed_slop = relax_bed.slop(g=genome_sizes_file, b=genome_window_size)
+        # nonnegative_bed = blacklist_bed.cat(relax_bed_slop)
+        # nonnegative_bed = nonnegative_bed.sort()
 #        negative_bed  = train_bed.intersect(nonnegative_bed, wa=True, v=True, sorted=True,c=True)
 #        negative_bed_df = pd.read_table(negative_bed.fn, names=['chrom', 'start', 'stop'],usecols =[0,1,2])
 #        neg_labels = pd.concat((negative_bed_df,pd.DataFrame(gencode_negative+0)))

@@ -1,4 +1,3 @@
-import re
 import argparse
 import numpy as np
 import pandas as pd
@@ -13,28 +12,26 @@ def make_argument_parser():
 
     parser = argparse.ArgumentParser(description="Predict a model.",formatter_class=argparse.RawTextHelpFormatter)
     
-    parser.add_argument('--data_dir', '-i', type=str, required=True,help='path to the input data')
-    parser.add_argument('--model_file', '-m', type=str, required=True,help='path to model file')
-    parser.add_argument('--cell_name', '-c', type=str, required=True,help='cell name')
-    parser.add_argument('--predict_region_file', '-p', type=str, required=True,help='predict region file')
-    
-    parser.add_argument('--bigwig_file_unique35', '-bf', type=str, required=False,help='35bp uniqueness file',default='')
-    parser.add_argument('--rnaseq_data_file', '-rf', type=str, required=False,help='RNA-Seq PCA data file',default='')
-    parser.add_argument('--gencode_file', '-gc', type=str, required=False,help='Genomic annotation file',default='')
+    parser.add_argument('--data_dir', '-i', type=str, required=True,help='data_dir')
+    parser.add_argument('--model_file', '-m', type=str, required=True,help='model_file')
+    parser.add_argument('--cell_name', '-c', type=str, required=True,help='cell_name')
+    parser.add_argument('--predict_region_file', '-p', type=str, required=True,help='predict_region_file')
 
-    parser.add_argument('--output_predict_path', '-o', type=str, required=True,help='output path of prediction')
-    parser.add_argument('--batch_size', '-b', type=int, required=False,help='batch size',default=512)
+    parser.add_argument('--output_predict_path', '-o', type=str, required=True,help='output_predict_path')
+    parser.add_argument('--batch_size', '-b', type=int, required=False,help='batch_size',default=512)
     parser.add_argument('--blacklist_file', '-l', type=str,required=False,
                         help='blacklist_file to use, no fitering if not provided',default='')
+    
+    
+    parser.add_argument('--unique35', '-u', action='store_true',help='unique35')
+    parser.add_argument('--conservative', '-cs', action='store_true',help='Should 100way.phastCons score be considered')
+    parser.add_argument('--cgi_score', '-ce', action='store_true',help='Should cgi_score be considered')
+    
     return parser
 
 def main():
     parser = make_argument_parser()
     args = parser.parse_args()
-    
-    bigwig_file_unique35 = args.bigwig_file_unique35
-    rnaseq_data_file = args.rnaseq_data_file
-    gencode_file = args.gencode_file
     
     data_dir = args.data_dir
     model_file = args.model_file
@@ -43,6 +40,12 @@ def main():
     output_predict_path = args.output_predict_path
     batch_size = args.batch_size
     blacklist_file = args.blacklist_file
+    
+    unique35 = args.unique35
+    conservative = args.conservative
+    cgi_score = args.cgi_score
+
+    
 
     model = load_model(model_file,custom_objects={'Attention1D': get_model.Attention1D,
                                                   'PositionEmbedding':PositionEmbedding,
@@ -54,10 +57,7 @@ def main():
     pred_chr = set(predict_region[0])
     predict_region.index = range(predict_region.shape[0])
     
-    if model_inputs[0][2] == 6:
-        unique35 = True
-    else:
-        unique35 = False
+
     if len(model_inputs) == 2:
         rnaseq = False
         gencode = False
@@ -76,12 +76,18 @@ def main():
     
 
     genome_fasta_file = data_dir+'/hg19.genome.fa'
+    
+    bigwig_file_unique35 = data_dir + '/wgEncodeDukeMapabilityUniqueness35bp.bigWig'
+    bw_conservative = data_dir + '/hg19.100way.phastCons.bw'
+    
     DNase_path =data_dir+ '/DNase/'
-    # bigwig_file_unique35 = data_dir + '/wgEncodeDukeMapabilityUniqueness35bp.bigWig'
-    # rnaseq_data_file = data_dir + '/rnaseq_data.csv'
-    # gencode_file = data_dir + '/gencode_feature_test.tsv'
-        
+    
     DNase_file = DNase_path+cell_name+'.1x.bw'
+    rnaseq_data_file = data_dir + '/rnaseq_data.csv'
+    gencode_file = data_dir + '/gencode_feature_test.tsv'
+        
+
+    
     genome = utils.import_genome(genome_fasta_file,pred_chr)
     
     rnaseq_pred = gencode_pred = 0
@@ -94,7 +100,11 @@ def main():
         gencode_pred = pd.read_csv(gencode_file, sep='\t', header=None,dtype=utils.np.bool_).values  
     
     
-    datagen_pred = utils.PredictionGeneratorSingle(genome,bigwig_file_unique35,DNase_file,predict_region,rnaseq_pred,gencode_pred,unique35,rnaseq,gencode,flanking,batch_size)
+    datagen_pred = utils.PredictionGeneratorSingle(genome,bigwig_file_unique35,DNase_file,predict_region,
+                                                   rnaseq_pred,gencode_pred,unique35,rnaseq,gencode,flanking,batch_size,True,
+                                                   conservative=conservative,
+                                                   bw_conservative = bw_conservative,
+                                                   cgi_score=cgi_score)
     pred = model.predict_generator(datagen_pred,verbose=1)
     pred_final = pred.flatten()
     if blacklist_file != '':

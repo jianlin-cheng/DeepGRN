@@ -6,37 +6,32 @@ from keras.optimizers import Adam
 from keras.models import load_model
 from pathlib import Path
 import os
-import get_model, utils
+import get_model
+import utils
 
 def make_argument_parser():
 
     parser = argparse.ArgumentParser(description="Train a model.",formatter_class=argparse.RawTextHelpFormatter)
     
-    parser.add_argument('--data_dir', '-i', type=str, required=True,help='path to the input data')
-    parser.add_argument('--tf_name', '-t', type=str, required=True,help='name of the transcription factor')
-    parser.add_argument('--output_dir', '-o', type=str, required=True,help='output path')
-    parser.add_argument('--genome_fasta_file', '-gf', type=str, required=True,help='genome fasta file')
-    parser.add_argument('--val_chr', '-v', type=str, required=False,help='name for validation chromosome',default='chr11')
-    
-    parser.add_argument('--bigwig_file_unique35', '-r', type=str, required=False,help='35bp uniqueness file, will not use this feature if left empty',default='')
-    parser.add_argument('--rnaseq_data_file', '-r', type=str, required=False,help='RNA-Seq PCA data file, will not use this feature if left empty',default='')
-    parser.add_argument('--gencode_file', '-g', type=str, required=False,help='Genomic annotation file, will not use this feature if left empty',default='')
+    parser.add_argument('--data_dir', '-i', type=str, required=True,help='data_dir')
+    parser.add_argument('--tf_name', '-t', type=str, required=True,help='tf_name')
+    parser.add_argument('--output_dir', '-o', type=str, required=True,help='output_dir')
 
     parser.add_argument('--attention_position', '-ap', type=str, required=False,\
-                        help='Position of attention layers, can be attention_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm',default='attention_after_lstm')
-    parser.add_argument('--flanking', '-f', type=int, required=False,help='flanking length',default=401)
-    
+                        help='Position of attention layers, can be attention1d_after_lstm, attention_before_lstm,attention_after_lstm,attention1d_after_lstm',default='attention_after_lstm')
+    parser.add_argument('--flanking', '-f', type=int, required=False,help='flanking',default=401)
+    parser.add_argument('--val_chr', '-v', type=str, required=False,help='val_chr',default='chr11')
     parser.add_argument('--epochs', '-e', type=int, required=False,help='epochs',default=60)
     parser.add_argument('--patience', '-p', type=int, required=False,help='patience',default=5)
-    parser.add_argument('--batch_size', '-s', type=int, required=False,help='batch size',default=64)
+    parser.add_argument('--batch_size', '-s', type=int, required=False,help='batch_size',default=64)
     parser.add_argument('--learningrate', '-l', type=float, required=False,help='learningrate',default=0.001)
-    parser.add_argument('--kernel_size', '-k', type=int, required=False,help='kernel size for Conv1D',default=34)
-    parser.add_argument('--num_filters', '-nf', type=int, required=False,help='number of filters for Conv1D',default=64)
+    parser.add_argument('--kernel_size', '-k', type=int, required=False,help='kernel_size for Conv1D',default=34)
+    parser.add_argument('--num_filters', '-nf', type=int, required=False,help='num_filters for Conv1D',default=64)
     parser.add_argument('--num_recurrent', '-nr', type=int, required=False,help='Output dim for LSTM',default=32)
     parser.add_argument('--num_dense', '-nd', type=int, required=False,help='Output dim for dense layers',default=64)
     parser.add_argument('--dropout_rate', '-d', type=float, required=False,help='dropout_rate for all layers except LSTM',default=0.1)
-    parser.add_argument('--rnn_dropout1', '-rd1', type=float, required=False,help='dropout rate for LSTM',default=0.5)
-    parser.add_argument('--rnn_dropout2', '-rd2', type=float, required=False,help='rnn dropout rate for LSTM',default=0.1)
+    parser.add_argument('--rnn_dropout1', '-rd1', type=float, required=False,help='dropout_rate for LSTM',default=0.5)
+    parser.add_argument('--rnn_dropout2', '-rd2', type=float, required=False,help='rnn_dropout_rate for LSTM',default=0.1)
 
     parser.add_argument('--merge', '-me', type=str, required=False,help='merge method, max or ave',default='ave')
     parser.add_argument('--num_conv', '-nc', type=int, required=False,help='Number of Conv1D layers',default=1)
@@ -44,18 +39,22 @@ def make_argument_parser():
     parser.add_argument('--num_denselayer', '-dl', type=int, required=False,help='Number of additional dense layers',default=1)
     parser.add_argument('--ratio_negative', '-rn', type=int, required=False,help='Ratio of negative samples to positive samples in each epoch',default=1)
     
-    # parser.add_argument('--rnaseq', '-r', action='store_true',help='Use gene expression profile as an additional feature')
-    # parser.add_argument('--gencode', '-g', action='store_true',help='Use genomic annotations as an additional feature')
-    # parser.add_argument('--unique35', '-u', action='store_true',help='Use sequence uniqueness as an additional feature')
+    parser.add_argument('--rnaseq', '-r', action='store_true',help='rnaseq')
+    parser.add_argument('--gencode', '-g', action='store_true',help='gencode')
+    parser.add_argument('--unique35', '-u', action='store_true',help='unique35')
     
-    parser.add_argument('--use_peak', '-a', action='store_true',help='should the positive bins sampled from peak regions?')
+    parser.add_argument('--conservative', '-cs', action='store_true',help='Should 100way.phastCons score be considered')
+    parser.add_argument('--cgi_score', '-ce', action='store_true',help='Should CGI score be considered')
+    
+    parser.add_argument('--use_peak', '-a', action='store_true',help='use_peak')
     parser.add_argument('--use_cudnn', '-c', action='store_true',help='use cudnnLSTM instead of LSTM, faster but will disable LSTM dropouts')
     parser.add_argument('--single_attention_vector', '-sa', action='store_true',help='merge attention weights in each position by averaging')
+#    parser.add_argument('--single_strand', '-ss', action='store_true',help='single_strand')
 
-    parser.add_argument('--positive_weight', '-pw', type=float, required=False,help='weight for positive samples',default=1.0)
-    parser.add_argument('--plot_model', '-pl', action='store_true',help='if the model architecture should be plotted')
+    parser.add_argument('--positive_weight', '-pw', type=float, required=False,help='positive_weight',default=1.0)
+    parser.add_argument('--plot_model', '-pl', action='store_true',help='plot_model')
     parser.add_argument('--random_seed', '-rs', type=int, required=False,help='random seed',default=0)
-    parser.add_argument('--val_negative_ratio', '-vn', type=int, required=False,help='ratio for negative samples in validation',default=19)
+    parser.add_argument('--val_negative_ratio', '-vn', type=int, required=False,help='val_negative_ratio',default=19)
 
     return parser
 
@@ -65,12 +64,6 @@ def main():
     
     data_dir = args.data_dir
     tf_name = args.tf_name
-    genome_fasta_file = args.genome_fasta_file
-    
-    bigwig_file_unique35 = args.bigwig_file_unique35
-    rnaseq_data_file = args.rnaseq_data_file
-    gencode_file = args.gencode_file
-
     attention_position = args.attention_position
     flanking = args.flanking
     output_dir = args.output_dir
@@ -94,9 +87,12 @@ def main():
     num_denselayer = args.num_denselayer
     ratio_negative = args.ratio_negative
     
-    rnaseq = rnaseq_data_file!=''
-    gencode = gencode_file!=''
-    unique35 = bigwig_file_unique35!=''
+    rnaseq = args.rnaseq
+    gencode = args.gencode
+    unique35 = args.unique35
+    conservative = args.conservative
+    cgi_score = args.cgi_score
+    
     positive_weight = args.positive_weight    
     
     use_peak = args.use_peak
@@ -107,14 +103,25 @@ def main():
     plot_model = args.plot_model
     if args.random_seed != 0:
         np.random.seed(args.random_seed)
-        
+    
+#    print(tf_name,attention_position,flanking,rnaseq,gencode,unique35,output_dir)
+#    print(epochs,patience,batch_size,learningrate,kernel_size,num_filters,num_recurrent,num_dense,dropout_rate,merge)
+#    print(num_conv,num_lstm,num_denselayer,ratio_negative,use_peak,use_cudnn)
+    
+    genome_fasta_file = data_dir+'/hg19.genome.fa'
     DNase_path =data_dir+ '/DNase'
+    bigwig_file_unique35 = data_dir + '/wgEncodeDukeMapabilityUniqueness35bp.bigWig'
+    rnaseq_data_file = data_dir + '/rnaseq_data.csv'
+    gencode_train_file = data_dir + '/gencode_feature_train.tsv'
+    
     train_label_path = data_dir + '/label/train/'
-    label_data_file = train_label_path+tf_name+'.train.labels.tsv.gz'
-    
     train_peaks_path = data_dir + '/label/train_positive/'
-    positive_peak_file = train_peaks_path+tf_name+'.train.peak.tsv'
     
+    bw_conservative = data_dir + '/hg19.100way.phastCons.bw'
+
+    
+    label_data_file = train_label_path+tf_name+'.train.labels.tsv.gz'
+    positive_peak_file = train_peaks_path+tf_name+'.train.peak.tsv'
     output_model_best = output_dir + '/best_model.h5'
     output_model = output_dir + attention_position + '.' + tf_name + '.{epoch:02d}.{val_acc:03f}.h5'
     output_history = output_dir + attention_position + '.' + tf_name + '.'+'1'+ '.'+str(flanking)+'.unique35'+str(unique35)+ '.RNAseq'+str(rnaseq)+ '.Gencode'+str(gencode)+'.csv'
@@ -131,20 +138,20 @@ def main():
         num_meta = num_meta + 8
     if gencode:
         num_meta = num_meta + 6
-        
+    
     module_outfile = Path(output_model_best)
     if module_outfile.is_file():
         model = load_model(output_model_best,custom_objects={'Attention1D': get_model.Attention1D})
     else:
-        n_channel=6
-        if not unique35:
-            n_channel = 5
+        n_channel = 5 + int(unique35) + int(conservative)+int(cgi_score)
         model = get_model.make_model(attention_position=attention_position,L=L,n_channel=n_channel, num_conv = num_conv,
                              num_denselayer=num_denselayer,num_lstm=num_lstm,kernel_size=kernel_size,num_filters=num_filters, 
                              num_recurrent=num_recurrent,num_dense=num_dense,dropout_rate = dropout_rate,
                              rnn_dropout=[rnn_dropout1,rnn_dropout2],num_meta=num_meta,merge=merge,cudnn=use_cudnn,
                              single_attention_vector=single_attention_vector)
     model.compile(Adam(lr=learningrate),loss='binary_crossentropy',metrics=['accuracy'])
+    
+    print(model.summary())
     
     rnaseq_train = rnaseq_val = 0
     if rnaseq:
@@ -156,7 +163,7 @@ def main():
     if gencode:
         print('loading Gencode features')
         
-        gencode_train,gencode_val = utils.import_gencode(gencode_file,train_idx,val_idx)
+        gencode_train,gencode_val = utils.import_gencode(gencode_train_file,train_idx,val_idx)
     else:
         gencode_train = gencode_val = 0
     
@@ -173,20 +180,28 @@ def main():
         val_label_bind = label_bind[label_bind.chrom.isin(val_chr)]
         datagen_train = utils.TrainGeneratorSingle_augmented(genome,bigwig_file_unique35,DNase_path,train_region,train_label_bind,
                                                        train_label_unbind,cell_list,rnaseq_train,gencode_train,True,unique35,
-                                                       rnaseq,gencode,flanking,batch_size,ratio_negative,double_strand)
+                                                       rnaseq,gencode,flanking,batch_size,ratio_negative,double_strand,
+                                                       conservative=conservative,
+                                                       bw_conservative = bw_conservative,cgi_score=cgi_score)
         datagen_val = utils.TrainGeneratorSingle_augmented(genome,bigwig_file_unique35,DNase_path,val_region,val_label_bind,
                                                      val_label_unbind,cell_list,rnaseq_val,gencode_val,False,unique35,
-                                                     rnaseq,gencode,flanking,batch_size,val_negative_ratio,double_strand)
+                                                     rnaseq,gencode,flanking,batch_size,val_negative_ratio,double_strand,
+                                                     conservative=conservative,
+                                                     bw_conservative = bw_conservative,cgi_score=cgi_score)
     else:
         
         datagen_train = utils.TrainGeneratorSingle(genome=genome,bw_dict_unique35=bigwig_file_unique35,DNase_path=DNase_path,
                                                   label_region=train_region,label_data=train_label_data,
                                                   label_data_unbind=train_label_unbind,cell_list=cell_list,rnaseq_data = rnaseq_train,
                                                   gencode_data=gencode_train,unique35=unique35,rnaseq=rnaseq,gencode=gencode,
-                                                  flanking=flanking,batch_size=batch_size,ratio_negative=ratio_negative,double_strand = double_strand)
+                                                  flanking=flanking,batch_size=batch_size,ratio_negative=ratio_negative,double_strand = double_strand,
+                                                  conservative=conservative,
+                                                  bw_conservative = bw_conservative,cgi_score=cgi_score)
         datagen_val = utils.TrainGeneratorSingle(genome,bigwig_file_unique35,DNase_path,val_region,val_label_data,val_label_unbind,
                                                 cell_list,rnaseq_val,gencode_val,unique35,rnaseq,gencode,flanking,batch_size,
-                                                val_negative_ratio,double_strand)
+                                                val_negative_ratio,double_strand,
+                                                conservative=conservative,
+                                                bw_conservative = bw_conservative,cgi_score=cgi_score)
     
     checkpointer1 = ModelCheckpoint(filepath=output_model,verbose=1, save_best_only=False, monitor='val_acc')
     checkpointer2 = ModelCheckpoint(filepath=output_model_best,verbose=1, save_best_only=True, monitor='val_acc')
